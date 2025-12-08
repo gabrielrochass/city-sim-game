@@ -5,854 +5,725 @@ using CitySim.Core;
 
 namespace CitySim.UI
 {
-    /// <summary>
-    /// Configurador automatico da UI.
-    /// Cria toda a interface do jogo em runtime.
-    /// </summary>
     public class UISetup : MonoBehaviour
     {
-        [Header("Cores do Tema")]
-        [SerializeField] private Color primaryColor = new Color(0.2f, 0.5f, 0.8f, 1f);
-        [SerializeField] private Color secondaryColor = new Color(0.15f, 0.35f, 0.65f, 1f);
-        [SerializeField] private Color accentColor = new Color(0.95f, 0.65f, 0.15f, 1f);
-        [SerializeField] private Color successColor = new Color(0.2f, 0.7f, 0.3f, 1f);
-        [SerializeField] private Color dangerColor = new Color(0.8f, 0.2f, 0.2f, 1f);
-        [SerializeField] private Color textColor = Color.white;
-        [SerializeField] private Color backgroundColor = new Color(0.12f, 0.14f, 0.18f, 0.98f);
+        // Cores
+        private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
+        private Color panelColor = new Color(0.08f, 0.1f, 0.14f, 0.98f);
+        private Color btnBlue = new Color(0.2f, 0.5f, 0.9f, 1f);
+        private Color btnGreen = new Color(0.2f, 0.7f, 0.3f, 1f);
+        private Color btnRed = new Color(0.8f, 0.25f, 0.25f, 1f);
+        private Color btnOrange = new Color(0.9f, 0.6f, 0.1f, 1f);
+        private Color btnPurple = new Color(0.6f, 0.3f, 0.8f, 1f);
 
         private Canvas _canvas;
-        private GameObject _mainMenuPanel;
+        private GameObject _menuPanel;
         private GameObject _instructionsPanel;
-        private GameObject _gameHUDPanel;
-        private GameObject _pauseMenuPanel;
-        private GameObject _gameOverPanel;
+        private GameObject _gamePanel;
+        private GameObject _pausePanel;
+        private GameObject _endPanel;
 
-        // HUD References
-        private TMP_Text _moneyText;
-        private TMP_Text _populationText;
-        private TMP_Text _happinessText;
-        private TMP_Text _turnText;
+        // === INDICADORES ===
+        private int orcamento = 10000;      // Dinheiro
+        private int satisfacao = 70;        // 0-100%
+        private int bemEstar = 60;          // 0-100%
+        private int votos = 55;             // 0-100%
+        private int populacao = 100;
+        private int turno = 1;
 
-        // Game State
-        private int _money = 10000;
-        private int _population = 100;
-        private int _happiness = 75;
-        private int _turn = 1;
+        // Renda e custos por turno
+        private int rendaBase = 500;
+        private int rendaComercio = 0;
+        private int custoManutencao = 0;
 
-        private void Start()
+        // Contagem de construcoes
+        private int casas = 0;
+        private int comercios = 0;
+        private int industrias = 0;
+        private int parques = 0;
+        private int escolas = 0;
+        private int hospitais = 0;
+
+        // UI References
+        private TMP_Text txtOrcamento;
+        private TMP_Text txtSatisfacao;
+        private TMP_Text txtBemEstar;
+        private TMP_Text txtVotos;
+        private TMP_Text txtPopulacao;
+        private TMP_Text txtTurno;
+        private TMP_Text txtFeedback;
+        private TMP_Text txtResumo;
+
+        // Barras de progresso
+        private RectTransform barraSatisfacao;
+        private RectTransform barraBemEstar;
+        private RectTransform barraVotos;
+
+        void Start()
         {
             _canvas = GetComponent<Canvas>();
-            if (_canvas == null)
-            {
-                Debug.LogError("[UISetup] Canvas nao encontrado!");
-                return;
-            }
-
-            CreateAllScreens();
-            ShowMainMenu();
+            CriarMenu();
+            CriarInstrucoes();
+            CriarJogo();
+            CriarPause();
+            CriarFim();
+            MostrarMenu();
         }
 
-        private void CreateAllScreens()
+        // ==================== MENU ====================
+        void CriarMenu()
         {
-            _mainMenuPanel = CreateMainMenuScreen();
-            _instructionsPanel = CreateInstructionsScreen();
-            _gameHUDPanel = CreateGameHUDScreen();
-            _pauseMenuPanel = CreatePauseMenuScreen();
-            _gameOverPanel = CreateGameOverScreen();
+            _menuPanel = CriarPainel("Menu", bgColor);
 
-            HideAllPanels();
+            var titulo = CriarTexto(_menuPanel.transform, "CITY SIM", 64);
+            titulo.color = Color.white;
+            PosicionarCentro(titulo.gameObject, 0, 150, 500, 80);
+
+            var sub = CriarTexto(_menuPanel.transform, "Meu Prefeito", 32);
+            sub.color = btnOrange;
+            PosicionarCentro(sub.gameObject, 0, 80, 400, 50);
+
+            CriarBotao(_menuPanel.transform, "JOGAR", btnGreen, 0, -20, 320, 65, IniciarJogo);
+            CriarBotao(_menuPanel.transform, "COMO JOGAR", btnBlue, 0, -100, 320, 65, MostrarInstrucoes);
+            CriarBotao(_menuPanel.transform, "SAIR", btnRed, 0, -180, 320, 65, Sair);
+
+            var credito = CriarTexto(_menuPanel.transform, "v1.0 - Unity 6", 16);
+            credito.color = new Color(1, 1, 1, 0.4f);
+            PosicionarCentro(credito.gameObject, 0, -280, 200, 30);
         }
 
-        private void HideAllPanels()
+        void MostrarMenu()
         {
-            _mainMenuPanel?.SetActive(false);
-            _instructionsPanel?.SetActive(false);
-            _gameHUDPanel?.SetActive(false);
-            _pauseMenuPanel?.SetActive(false);
-            _gameOverPanel?.SetActive(false);
+            EsconderTudo();
+            _menuPanel.SetActive(true);
         }
 
-        #region Main Menu
-
-        private GameObject CreateMainMenuScreen()
+        // ==================== INSTRUCOES ====================
+        void CriarInstrucoes()
         {
-            var panel = CreatePanel("MainMenuPanel");
-            var bg = panel.GetComponent<Image>();
-            bg.color = backgroundColor;
+            _instructionsPanel = CriarPainel("Instrucoes", bgColor);
 
-            // Container central
-            var container = CreateVerticalContainer(panel.transform, "Container");
-            var containerRect = container.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.3f, 0.2f);
-            containerRect.anchorMax = new Vector2(0.7f, 0.8f);
-            containerRect.offsetMin = Vector2.zero;
-            containerRect.offsetMax = Vector2.zero;
+            var titulo = CriarTexto(_instructionsPanel.transform, "COMO JOGAR", 48);
+            titulo.color = btnOrange;
+            PosicionarCentro(titulo.gameObject, 0, 280, 500, 60);
 
-            // Logo/Titulo
-            var titleBg = new GameObject("TitleBg");
-            titleBg.transform.SetParent(container.transform, false);
-            var titleBgRect = titleBg.AddComponent<RectTransform>();
-            titleBgRect.sizeDelta = new Vector2(0, 120);
-            var titleBgLayout = titleBg.AddComponent<LayoutElement>();
-            titleBgLayout.minHeight = 120;
+            string txt = "<b><color=#4A90D9>OBJETIVO</color></b>\n" +
+                "Administre sua cidade e seja reeleito!\n\n" +
+                "<b><color=#4A90D9>INDICADORES</color></b>\n" +
+                "<color=#50C878>[$] Orcamento</color> - Seu dinheiro. Se zerar, GAME OVER!\n" +
+                "<color=#F5A623>[S] Satisfacao</color> - Felicidade do povo. Minimo 20%!\n" +
+                "<color=#50C878>[B] Bem-Estar</color> - Saude e qualidade de vida.\n" +
+                "<color=#9B59B6>[V] Votos</color> - Sua aprovacao. Precisa de maioria (51%)!\n\n" +
+                "<b><color=#4A90D9>CONSTRUCOES</color></b>\n" +
+                "Casa: +50 pop, +satisfacao\n" +
+                "Comercio: +renda, +satisfacao\n" +
+                "Industria: ++renda, -bem-estar\n" +
+                "Parque: +bem-estar, +votos\n" +
+                "Escola: +satisfacao, +votos\n" +
+                "Hospital: +bem-estar, +votos\n\n" +
+                "<b><color=#E74C3C>GAME OVER</color></b>\n" +
+                "Orcamento <= 0 | Satisfacao <= 20% | Votos < 51%";
 
-            var title = CreateText(titleBg.transform, "Title", "CITY SIM", 56, FontStyles.Bold);
-            title.color = textColor;
-            var titleRect = title.GetComponent<RectTransform>();
-            titleRect.anchorMin = new Vector2(0, 0.5f);
-            titleRect.anchorMax = new Vector2(1, 1);
-            titleRect.offsetMin = Vector2.zero;
-            titleRect.offsetMax = Vector2.zero;
+            var instrucoes = CriarTexto(_instructionsPanel.transform, txt, 18);
+            instrucoes.alignment = TextAlignmentOptions.Left;
+            instrucoes.enableWordWrapping = true;
+            PosicionarCentro(instrucoes.gameObject, 0, -20, 700, 450);
 
-            var subtitle = CreateText(titleBg.transform, "Subtitle", "- Meu Prefeito -", 24, FontStyles.Italic);
-            subtitle.color = accentColor;
-            var subtitleRect = subtitle.GetComponent<RectTransform>();
-            subtitleRect.anchorMin = new Vector2(0, 0);
-            subtitleRect.anchorMax = new Vector2(1, 0.5f);
-            subtitleRect.offsetMin = Vector2.zero;
-            subtitleRect.offsetMax = Vector2.zero;
-
-            CreateSpacer(container.transform, 50);
-
-            // Botoes
-            CreateMenuButton(container.transform, "BtnJogar", "> JOGAR", primaryColor, OnPlayClicked);
-            CreateSpacer(container.transform, 10);
-            CreateMenuButton(container.transform, "BtnInstrucoes", "? INSTRUCOES", secondaryColor, OnInstructionsClicked);
-            CreateSpacer(container.transform, 10);
-            CreateMenuButton(container.transform, "BtnSair", "X SAIR", dangerColor, OnQuitClicked);
-
-            CreateSpacer(container.transform, 40);
-
-            // Versao
-            var version = CreateText(container.transform, "Version", "v1.0.0 - Unity 6", 12, FontStyles.Normal);
-            version.color = new Color(1, 1, 1, 0.4f);
-            version.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 20);
-
-            return panel;
+            CriarBotao(_instructionsPanel.transform, "VOLTAR", btnBlue, 0, -300, 250, 55, MostrarMenu);
         }
 
-        private GameObject CreateMenuButton(Transform parent, string name, string text, Color color, UnityEngine.Events.UnityAction onClick)
+        void MostrarInstrucoes()
         {
-            var btnObj = new GameObject(name);
-            btnObj.transform.SetParent(parent, false);
-
-            var rect = btnObj.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(0, 55);
-
-            var image = btnObj.AddComponent<Image>();
-            image.color = color;
-
-            var button = btnObj.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.AddListener(onClick);
-
-            var colors = button.colors;
-            colors.highlightedColor = new Color(color.r + 0.15f, color.g + 0.15f, color.b + 0.15f, 1f);
-            colors.pressedColor = new Color(color.r - 0.1f, color.g - 0.1f, color.b - 0.1f, 1f);
-            colors.selectedColor = color;
-            button.colors = colors;
-
-            var textComp = CreateText(btnObj.transform, "Text", text, 22, FontStyles.Bold);
-            textComp.alignment = TextAlignmentOptions.Center;
-            var textRect = textComp.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var layoutElement = btnObj.AddComponent<LayoutElement>();
-            layoutElement.minHeight = 55;
-            layoutElement.preferredHeight = 55;
-
-            return btnObj;
+            EsconderTudo();
+            _instructionsPanel.SetActive(true);
         }
 
-        private void OnPlayClicked()
+        // ==================== JOGO ====================
+        void CriarJogo()
         {
+            _gamePanel = CriarPainel("Jogo", bgColor);
+
+            // === BARRA SUPERIOR - INDICADORES ===
+            var barraTop = CriarPainelFilho(_gamePanel.transform, "BarraTop", panelColor);
+            PosicionarTopo(barraTop, 110);
+
+            // Linha 1: Indicadores principais
+            float y1 = -25;
+            txtOrcamento = CriarIndicador(barraTop.transform, "$ ORCAMENTO", orcamento.ToString(), btnGreen, -380, y1);
+            txtSatisfacao = CriarIndicador(barraTop.transform, "SATISFACAO", satisfacao + "%", btnOrange, -120, y1);
+            txtBemEstar = CriarIndicador(barraTop.transform, "BEM-ESTAR", bemEstar + "%", btnGreen, 140, y1);
+            txtVotos = CriarIndicador(barraTop.transform, "VOTOS", votos + "%", btnPurple, 380, y1);
+
+            // Linha 2: Barras de progresso
+            float y2 = -70;
+            CriarBarraProgresso(barraTop.transform, "BarraSat", ref barraSatisfacao, btnOrange, -120, y2, satisfacao);
+            CriarBarraProgresso(barraTop.transform, "BarraBem", ref barraBemEstar, btnGreen, 140, y2, bemEstar);
+            CriarBarraProgresso(barraTop.transform, "BarraVot", ref barraVotos, btnPurple, 380, y2, votos);
+
+            // === INFO CENTRAL ===
+            var infoPanel = CriarPainelFilho(_gamePanel.transform, "InfoPanel", new Color(0, 0, 0, 0.3f));
+            PosicionarCentro(infoPanel, 0, 180, 400, 70);
+
+            txtPopulacao = CriarTexto(infoPanel.transform, "100 habitantes", 28);
+            txtPopulacao.color = Color.white;
+            PosicionarCentro(txtPopulacao.gameObject, 0, 10, 380, 35);
+
+            txtTurno = CriarTexto(infoPanel.transform, "Turno 1", 22);
+            txtTurno.color = new Color(0.7f, 0.7f, 0.7f);
+            PosicionarCentro(txtTurno.gameObject, 0, -18, 380, 30);
+
+            // === CONSTRUCOES ===
+            var tituloConst = CriarTexto(_gamePanel.transform, "CONSTRUIR", 24);
+            tituloConst.color = btnOrange;
+            PosicionarCentro(tituloConst.gameObject, 0, 110, 200, 35);
+
+            // Grid de construcoes 3x2
+            float bw = 200, bh = 75;
+            float espacoX = 220, espacoY = 90;
+            
+            CriarBotaoConstrucao(_gamePanel.transform, "CASA\n$800 | +50 pop", btnBlue, -espacoX, 30, bw, bh, () => Construir("casa"));
+            CriarBotaoConstrucao(_gamePanel.transform, "COMERCIO\n$1200 | +renda", btnGreen, 0, 30, bw, bh, () => Construir("comercio"));
+            CriarBotaoConstrucao(_gamePanel.transform, "INDUSTRIA\n$2000 | ++renda", new Color(0.5f, 0.5f, 0.6f), espacoX, 30, bw, bh, () => Construir("industria"));
+            
+            CriarBotaoConstrucao(_gamePanel.transform, "PARQUE\n$600 | +bem-estar", new Color(0.3f, 0.7f, 0.4f), -espacoX, 30 - espacoY, bw, bh, () => Construir("parque"));
+            CriarBotaoConstrucao(_gamePanel.transform, "ESCOLA\n$1500 | +satisfacao", btnOrange, 0, 30 - espacoY, bw, bh, () => Construir("escola"));
+            CriarBotaoConstrucao(_gamePanel.transform, "HOSPITAL\n$2500 | +bem-estar", btnPurple, espacoX, 30 - espacoY, bw, bh, () => Construir("hospital"));
+
+            // === FEEDBACK ===
+            txtFeedback = CriarTexto(_gamePanel.transform, "", 22);
+            txtFeedback.color = Color.yellow;
+            PosicionarCentro(txtFeedback.gameObject, 0, -110, 600, 40);
+
+            // === RESUMO FINANCEIRO ===
+            txtResumo = CriarTexto(_gamePanel.transform, "", 18);
+            txtResumo.color = new Color(0.7f, 0.7f, 0.7f);
+            PosicionarCentro(txtResumo.gameObject, 0, -150, 600, 30);
+
+            // === BARRA INFERIOR ===
+            CriarBotao(_gamePanel.transform, "PROXIMO TURNO", btnOrange, 120, -220, 280, 60, ProximoTurno);
+            CriarBotao(_gamePanel.transform, "MENU", new Color(0.35f, 0.35f, 0.4f), -180, -220, 140, 60, Pausar);
+
+            AtualizarHUD();
+        }
+
+        TMP_Text CriarIndicador(Transform parent, string label, string valor, Color cor, float x, float y)
+        {
+            var container = new GameObject(label);
+            container.transform.SetParent(parent, false);
+            var rect = container.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 1);
+            rect.anchorMax = new Vector2(0.5f, 1);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(180, 50);
+
+            var lblTxt = CriarTexto(container.transform, label, 14);
+            lblTxt.color = new Color(0.6f, 0.6f, 0.6f);
+            lblTxt.alignment = TextAlignmentOptions.Center;
+            PosicionarCentro(lblTxt.gameObject, 0, 15, 180, 20);
+
+            var valTxt = CriarTexto(container.transform, valor, 26);
+            valTxt.color = cor;
+            valTxt.fontStyle = FontStyles.Bold;
+            PosicionarCentro(valTxt.gameObject, 0, -10, 180, 35);
+
+            return valTxt;
+        }
+
+        void CriarBarraProgresso(Transform parent, string nome, ref RectTransform fillRef, Color cor, float x, float y, int valor)
+        {
+            var bg = CriarPainelFilho(parent, nome + "Bg", new Color(0.2f, 0.2f, 0.25f));
+            var bgRect = bg.GetComponent<RectTransform>();
+            bgRect.anchorMin = new Vector2(0.5f, 1);
+            bgRect.anchorMax = new Vector2(0.5f, 1);
+            bgRect.anchoredPosition = new Vector2(x, y);
+            bgRect.sizeDelta = new Vector2(150, 12);
+
+            var fill = CriarPainelFilho(bg.transform, "Fill", cor);
+            fillRef = fill.GetComponent<RectTransform>();
+            fillRef.anchorMin = new Vector2(0, 0);
+            fillRef.anchorMax = new Vector2(valor / 100f, 1);
+            fillRef.offsetMin = Vector2.zero;
+            fillRef.offsetMax = Vector2.zero;
+        }
+
+        void CriarBotaoConstrucao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao)
+        {
+            var go = new GameObject("Btn");
+            go.transform.SetParent(parent, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(w, h);
+
+            var img = go.AddComponent<Image>();
+            img.color = new Color(cor.r * 0.7f, cor.g * 0.7f, cor.b * 0.7f, 0.95f);
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(acao);
+
+            var colors = btn.colors;
+            colors.highlightedColor = cor;
+            colors.pressedColor = new Color(cor.r * 0.5f, cor.g * 0.5f, cor.b * 0.5f);
+            btn.colors = colors;
+
+            var txt = CriarTexto(go.transform, texto, 16);
+            txt.enableWordWrapping = true;
+            var txtRect = txt.GetComponent<RectTransform>();
+            txtRect.anchorMin = Vector2.zero;
+            txtRect.anchorMax = Vector2.one;
+            txtRect.offsetMin = new Vector2(8, 5);
+            txtRect.offsetMax = new Vector2(-8, -5);
+        }
+
+        void MostrarJogo()
+        {
+            EsconderTudo();
+            _gamePanel.SetActive(true);
+            AtualizarHUD();
+        }
+
+        void IniciarJogo()
+        {
+            // Reset
+            orcamento = 10000;
+            satisfacao = 70;
+            bemEstar = 60;
+            votos = 55;
+            populacao = 100;
+            turno = 1;
+            rendaComercio = 0;
+            custoManutencao = 0;
+            casas = comercios = industrias = parques = escolas = hospitais = 0;
+
             GameManager.Instance.SetGameState(GameState.Playing);
-            ShowGameHUD();
+            txtFeedback.text = "Bem-vindo, Prefeito! Construa sua cidade.";
+            txtFeedback.color = Color.white;
+            MostrarJogo();
         }
 
-        private void OnInstructionsClicked()
+        void Construir(string tipo)
         {
-            GameManager.Instance.SetGameState(GameState.Instructions);
-            ShowInstructions();
-        }
+            int custo = 0;
+            string msg = "";
+            bool sucesso = false;
 
-        private void OnQuitClicked()
-        {
-            #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-            #else
-            Application.Quit();
-            #endif
-        }
-
-        #endregion
-
-        #region Instructions Screen
-
-        private GameObject CreateInstructionsScreen()
-        {
-            var panel = CreatePanel("InstructionsPanel");
-            var bg = panel.GetComponent<Image>();
-            bg.color = backgroundColor;
-
-            // Container
-            var container = CreateVerticalContainer(panel.transform, "Container");
-            var containerRect = container.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.15f, 0.1f);
-            containerRect.anchorMax = new Vector2(0.85f, 0.9f);
-            containerRect.offsetMin = Vector2.zero;
-            containerRect.offsetMax = Vector2.zero;
-
-            // Titulo
-            var title = CreateText(container.transform, "Title", "COMO JOGAR", 42, FontStyles.Bold);
-            title.color = accentColor;
-            title.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 60);
-
-            CreateSpacer(container.transform, 20);
-
-            // Scroll View para instrucoes
-            var scrollObj = new GameObject("ScrollArea");
-            scrollObj.transform.SetParent(container.transform, false);
-            var scrollRect = scrollObj.AddComponent<RectTransform>();
-            var scrollLayout = scrollObj.AddComponent<LayoutElement>();
-            scrollLayout.flexibleHeight = 1;
-            scrollLayout.minHeight = 300;
-
-            var scrollBg = scrollObj.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0.3f);
-
-            // Conteudo das instrucoes
-            string instructions = "<b><color=#F5A623>OBJETIVO</color></b>\n" +
-                "Construa e gerencie sua cidade para alcancar 10.000 habitantes!\n\n" +
-                "<b><color=#F5A623>CONSTRUCOES</color></b>\n" +
-                "<color=#4A90D9>[RES]</color> Residencial - Aumenta populacao (+50 hab)\n" +
-                "<color=#4A90D9>[COM]</color> Comercial - Gera receita (+$500/turno)\n" +
-                "<color=#4A90D9>[IND]</color> Industrial - Produz recursos (+$300/turno)\n" +
-                "<color=#50C878>[PAR]</color> Parque - Aumenta felicidade (+5%)\n" +
-                "<color=#50C878>[ESC]</color> Escola - Melhora educacao (+3%)\n" +
-                "<color=#50C878>[HOS]</color> Hospital - Melhora saude (+3%)\n" +
-                "<color=#50C878>[DEL]</color> Delegacia - Aumenta seguranca (+3%)\n\n" +
-                "<b><color=#F5A623>ECONOMIA</color></b>\n" +
-                "- Gerencie impostos e orcamento\n" +
-                "- Mantenha saldo positivo\n" +
-                "- Invista em infraestrutura\n\n" +
-                "<b><color=#E74C3C>CUIDADO</color></b>\n" +
-                "- Se o dinheiro acabar, voce perde!\n" +
-                "- Mantenha a populacao feliz\n\n" +
-                "<b><color=#F5A623>DICAS</color></b>\n" +
-                "- Comece com residencias e comercio\n" +
-                "- Balance crescimento e manutencao\n" +
-                "- Observe os indicadores no topo da tela\n" +
-                "- Pressione ESC para pausar o jogo";
-
-            var instructionsText = CreateText(scrollObj.transform, "Instructions", instructions, 16, FontStyles.Normal);
-            instructionsText.alignment = TextAlignmentOptions.TopLeft;
-            instructionsText.enableWordWrapping = true;
-            instructionsText.overflowMode = TextOverflowModes.Overflow;
-            var instrRect = instructionsText.GetComponent<RectTransform>();
-            instrRect.anchorMin = Vector2.zero;
-            instrRect.anchorMax = Vector2.one;
-            instrRect.offsetMin = new Vector2(20, 20);
-            instrRect.offsetMax = new Vector2(-20, -20);
-
-            CreateSpacer(container.transform, 20);
-
-            // Botao voltar
-            CreateMenuButton(container.transform, "BtnVoltar", "< VOLTAR AO MENU", secondaryColor, OnBackToMenuClicked);
-
-            return panel;
-        }
-
-        private void OnBackToMenuClicked()
-        {
-            GameManager.Instance.SetGameState(GameState.MainMenu);
-            ShowMainMenu();
-        }
-
-        #endregion
-
-        #region Game HUD
-
-        private GameObject CreateGameHUDScreen()
-        {
-            var panel = CreatePanel("GameHUDPanel");
-            var bg = panel.GetComponent<Image>();
-            bg.color = Color.clear;
-
-            // Top Bar
-            CreateTopBar(panel.transform);
-
-            // Side Panel (construcoes)
-            CreateBuildingPanel(panel.transform);
-
-            // Bottom Info
-            CreateBottomInfo(panel.transform);
-
-            return panel;
-        }
-
-        private void CreateTopBar(Transform parent)
-        {
-            var topBar = new GameObject("TopBar");
-            topBar.transform.SetParent(parent, false);
-            var rect = topBar.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0, 1);
-            rect.anchorMax = new Vector2(1, 1);
-            rect.pivot = new Vector2(0.5f, 1);
-            rect.sizeDelta = new Vector2(0, 50);
-            rect.anchoredPosition = Vector2.zero;
-
-            var image = topBar.AddComponent<Image>();
-            image.color = new Color(0.1f, 0.12f, 0.16f, 0.95f);
-
-            var layout = topBar.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(15, 15, 8, 8);
-            layout.spacing = 25;
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childForceExpandWidth = false;
-            layout.childForceExpandHeight = true;
-
-            // Indicadores
-            _moneyText = CreateIndicator(topBar.transform, "$", FormatMoney(_money), successColor);
-            _populationText = CreateIndicator(topBar.transform, "Pop", _population.ToString(), primaryColor);
-            _happinessText = CreateIndicator(topBar.transform, "Fel", _happiness + "%", accentColor);
-            _turnText = CreateIndicator(topBar.transform, "T", "Turno " + _turn, textColor);
-
-            // Espacador flexivel
-            var spacer = new GameObject("Spacer");
-            spacer.transform.SetParent(topBar.transform, false);
-            spacer.AddComponent<RectTransform>();
-            var spacerLayout = spacer.AddComponent<LayoutElement>();
-            spacerLayout.flexibleWidth = 1;
-
-            // Botao Pause
-            CreateTopButton(topBar.transform, "PauseBtn", "||", OnPauseClicked);
-            
-            // Botao Proximo Turno
-            CreateTopButton(topBar.transform, "NextTurnBtn", ">>", OnNextTurnClicked);
-        }
-
-        private TMP_Text CreateIndicator(Transform parent, string label, string value, Color color)
-        {
-            var indicator = new GameObject("Indicator_" + label);
-            indicator.transform.SetParent(parent, false);
-
-            var layout = indicator.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = 8;
-            layout.childAlignment = TextAnchor.MiddleLeft;
-            layout.childForceExpandWidth = false;
-            layout.childControlWidth = false;
-            layout.childControlHeight = false;
-
-            var layoutElement = indicator.AddComponent<LayoutElement>();
-            layoutElement.minWidth = 120;
-
-            var labelText = CreateText(indicator.transform, "Label", label, 14, FontStyles.Bold);
-            labelText.color = color;
-            var labelRect = labelText.GetComponent<RectTransform>();
-            labelRect.sizeDelta = new Vector2(35, 30);
-
-            var valueText = CreateText(indicator.transform, "Value", value, 16, FontStyles.Bold);
-            valueText.color = textColor;
-            var valueRect = valueText.GetComponent<RectTransform>();
-            valueRect.sizeDelta = new Vector2(80, 30);
-
-            return valueText;
-        }
-
-        private void CreateTopButton(Transform parent, string name, string text, UnityEngine.Events.UnityAction onClick)
-        {
-            var btnObj = new GameObject(name);
-            btnObj.transform.SetParent(parent, false);
-
-            var rect = btnObj.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(45, 35);
-
-            var image = btnObj.AddComponent<Image>();
-            image.color = secondaryColor;
-
-            var button = btnObj.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.AddListener(onClick);
-
-            var textComp = CreateText(btnObj.transform, "Text", text, 16, FontStyles.Bold);
-            textComp.alignment = TextAlignmentOptions.Center;
-            var textRect = textComp.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var layoutElement = btnObj.AddComponent<LayoutElement>();
-            layoutElement.minWidth = 45;
-            layoutElement.minHeight = 35;
-        }
-
-        private void CreateBuildingPanel(Transform parent)
-        {
-            var sidePanel = new GameObject("BuildingPanel");
-            sidePanel.transform.SetParent(parent, false);
-            var rect = sidePanel.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0, 0.15f);
-            rect.anchorMax = new Vector2(0, 0.85f);
-            rect.pivot = new Vector2(0, 0.5f);
-            rect.sizeDelta = new Vector2(180, 0);
-            rect.anchoredPosition = new Vector2(10, 0);
-
-            var image = sidePanel.AddComponent<Image>();
-            image.color = new Color(0.1f, 0.12f, 0.16f, 0.95f);
-
-            var layout = sidePanel.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(8, 8, 10, 10);
-            layout.spacing = 6;
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-
-            // Titulo
-            var title = CreateText(sidePanel.transform, "Title", "CONSTRUIR", 14, FontStyles.Bold);
-            title.color = accentColor;
-            var titleLayout = title.gameObject.AddComponent<LayoutElement>();
-            titleLayout.minHeight = 25;
-
-            // Separador
-            CreateSeparator(sidePanel.transform);
-
-            // Botoes de construcao
-            CreateBuildingButton(sidePanel.transform, "Residencial", "$1000", primaryColor, () => OnBuildClicked("Residencial", 1000));
-            CreateBuildingButton(sidePanel.transform, "Comercial", "$1500", primaryColor, () => OnBuildClicked("Comercial", 1500));
-            CreateBuildingButton(sidePanel.transform, "Industrial", "$2000", primaryColor, () => OnBuildClicked("Industrial", 2000));
-            
-            CreateSeparator(sidePanel.transform);
-            
-            CreateBuildingButton(sidePanel.transform, "Parque", "$800", successColor, () => OnBuildClicked("Parque", 800));
-            CreateBuildingButton(sidePanel.transform, "Escola", "$2500", successColor, () => OnBuildClicked("Escola", 2500));
-            CreateBuildingButton(sidePanel.transform, "Hospital", "$3000", successColor, () => OnBuildClicked("Hospital", 3000));
-            CreateBuildingButton(sidePanel.transform, "Delegacia", "$2000", successColor, () => OnBuildClicked("Delegacia", 2000));
-        }
-
-        private void CreateSeparator(Transform parent)
-        {
-            var sep = new GameObject("Separator");
-            sep.transform.SetParent(parent, false);
-            var sepRect = sep.AddComponent<RectTransform>();
-            sepRect.sizeDelta = new Vector2(0, 2);
-            var image = sep.AddComponent<Image>();
-            image.color = new Color(1, 1, 1, 0.1f);
-            var layout = sep.AddComponent<LayoutElement>();
-            layout.minHeight = 2;
-            layout.preferredHeight = 2;
-        }
-
-        private void CreateBuildingButton(Transform parent, string text, string cost, Color color, UnityEngine.Events.UnityAction onClick)
-        {
-            var btn = new GameObject("Btn_" + text);
-            btn.transform.SetParent(parent, false);
-
-            var btnRect = btn.AddComponent<RectTransform>();
-            btnRect.sizeDelta = new Vector2(0, 38);
-
-            var image = btn.AddComponent<Image>();
-            image.color = new Color(color.r * 0.6f, color.g * 0.6f, color.b * 0.6f, 0.9f);
-
-            var button = btn.AddComponent<Button>();
-            button.targetGraphic = image;
-            button.onClick.AddListener(onClick);
-
-            var colors = button.colors;
-            colors.highlightedColor = color;
-            colors.pressedColor = new Color(color.r * 0.8f, color.g * 0.8f, color.b * 0.8f, 1f);
-            button.colors = colors;
-
-            // Container para texto
-            var textContainer = new GameObject("TextContainer");
-            textContainer.transform.SetParent(btn.transform, false);
-            var containerRect = textContainer.AddComponent<RectTransform>();
-            containerRect.anchorMin = Vector2.zero;
-            containerRect.anchorMax = Vector2.one;
-            containerRect.offsetMin = new Vector2(8, 2);
-            containerRect.offsetMax = new Vector2(-8, -2);
-
-            var textObj = CreateText(textContainer.transform, "Text", text, 12, FontStyles.Normal);
-            textObj.alignment = TextAlignmentOptions.Left;
-            var textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = new Vector2(0, 0);
-            textRect.anchorMax = new Vector2(0.65f, 1);
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-
-            var costText = CreateText(textContainer.transform, "Cost", cost, 11, FontStyles.Bold);
-            costText.alignment = TextAlignmentOptions.Right;
-            costText.color = successColor;
-            var costRect = costText.GetComponent<RectTransform>();
-            costRect.anchorMin = new Vector2(0.65f, 0);
-            costRect.anchorMax = new Vector2(1, 1);
-            costRect.offsetMin = Vector2.zero;
-            costRect.offsetMax = Vector2.zero;
-
-            var layoutElement = btn.AddComponent<LayoutElement>();
-            layoutElement.minHeight = 38;
-        }
-
-        private void CreateBottomInfo(Transform parent)
-        {
-            var bottomBar = new GameObject("BottomBar");
-            bottomBar.transform.SetParent(parent, false);
-            var rect = bottomBar.AddComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.25f, 0);
-            rect.anchorMax = new Vector2(0.75f, 0);
-            rect.pivot = new Vector2(0.5f, 0);
-            rect.sizeDelta = new Vector2(0, 40);
-            rect.anchoredPosition = new Vector2(0, 10);
-
-            var image = bottomBar.AddComponent<Image>();
-            image.color = new Color(0.1f, 0.12f, 0.16f, 0.9f);
-
-            var infoText = CreateText(bottomBar.transform, "InfoText", "Clique em uma construcao para adicionar a sua cidade", 13, FontStyles.Italic);
-            infoText.alignment = TextAlignmentOptions.Center;
-            infoText.color = new Color(1, 1, 1, 0.7f);
-            var textRect = infoText.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(15, 5);
-            textRect.offsetMax = new Vector2(-15, -5);
-        }
-
-        private void OnPauseClicked()
-        {
-            GameManager.Instance.SetGameState(GameState.Paused);
-            ShowPauseMenu();
-        }
-
-        private void OnNextTurnClicked()
-        {
-            _turn++;
-            _money += 500; // Receita base
-            _population += Random.Range(5, 20);
-            _happiness = Mathf.Clamp(_happiness + Random.Range(-5, 5), 0, 100);
-            
-            UpdateHUD();
-            
-            // Verificar vitoria
-            if (_population >= 10000)
+            switch (tipo)
             {
-                GameManager.Instance.SetGameState(GameState.GameOverWin);
-                ShowGameOver(true);
+                case "casa":
+                    custo = 800;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        populacao += 50;
+                        satisfacao += 3;
+                        casas++;
+                        custoManutencao += 20;
+                        msg = "+50 habitantes! Satisfacao +3%";
+                        sucesso = true;
+                    }
+                    break;
+
+                case "comercio":
+                    custo = 1200;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        rendaComercio += 200;
+                        satisfacao += 2;
+                        comercios++;
+                        msg = "+$200/turno! Satisfacao +2%";
+                        sucesso = true;
+                    }
+                    break;
+
+                case "industria":
+                    custo = 2000;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        rendaComercio += 400;
+                        bemEstar -= 5;
+                        votos -= 2;
+                        industrias++;
+                        msg = "+$400/turno! Mas bem-estar -5%";
+                        sucesso = true;
+                    }
+                    break;
+
+                case "parque":
+                    custo = 600;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        bemEstar += 8;
+                        votos += 3;
+                        satisfacao += 2;
+                        parques++;
+                        custoManutencao += 30;
+                        msg = "Bem-estar +8%! Votos +3%";
+                        sucesso = true;
+                    }
+                    break;
+
+                case "escola":
+                    custo = 1500;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        satisfacao += 6;
+                        votos += 4;
+                        escolas++;
+                        custoManutencao += 80;
+                        msg = "Satisfacao +6%! Votos +4%";
+                        sucesso = true;
+                    }
+                    break;
+
+                case "hospital":
+                    custo = 2500;
+                    if (orcamento >= custo)
+                    {
+                        orcamento -= custo;
+                        bemEstar += 10;
+                        votos += 5;
+                        satisfacao += 3;
+                        hospitais++;
+                        custoManutencao += 150;
+                        msg = "Bem-estar +10%! Votos +5%";
+                        sucesso = true;
+                    }
+                    break;
             }
-            // Verificar derrota
-            else if (_money < 0)
-            {
-                GameManager.Instance.SetGameState(GameState.GameOverLose);
-                ShowGameOver(false);
-            }
-        }
 
-        private void OnBuildClicked(string buildingType, int cost)
-        {
-            if (_money >= cost)
+            if (sucesso)
             {
-                _money -= cost;
-                
-                switch (buildingType)
-                {
-                    case "Residencial": _population += 50; break;
-                    case "Comercial": _money += 200; break;
-                    case "Parque": _happiness += 5; break;
-                    case "Escola": 
-                    case "Hospital": 
-                    case "Delegacia": _happiness += 3; break;
-                }
-                
-                _happiness = Mathf.Clamp(_happiness, 0, 100);
-                UpdateHUD();
-                Debug.Log("[CitySim] Construido: " + buildingType + " por $" + cost);
+                txtFeedback.text = msg;
+                txtFeedback.color = btnGreen;
             }
             else
             {
-                Debug.Log("[CitySim] Dinheiro insuficiente!");
+                txtFeedback.text = "Orcamento insuficiente! Precisa de $" + custo;
+                txtFeedback.color = btnRed;
+            }
+
+            ClampValores();
+            AtualizarHUD();
+            VerificarGameOver();
+        }
+
+        void ProximoTurno()
+        {
+            turno++;
+
+            // Calcular renda e custos
+            int renda = rendaBase + rendaComercio;
+            int custos = custoManutencao;
+            int saldo = renda - custos;
+
+            orcamento += saldo;
+
+            // Decaimento natural
+            satisfacao -= 2;
+            bemEstar -= 1;
+            votos -= 1;
+
+            // Bonus por populacao
+            if (populacao > 500) votos += 1;
+            if (populacao > 1000) { renda += 100; orcamento += 100; }
+
+            // Penalidades
+            if (bemEstar < 40) satisfacao -= 3;
+            if (satisfacao < 50) votos -= 2;
+
+            ClampValores();
+
+            string saldoStr = saldo >= 0 ? "+$" + saldo : "-$" + Mathf.Abs(saldo);
+            txtFeedback.text = "Turno " + turno + "! " + saldoStr + " (Renda: $" + renda + " - Custos: $" + custos + ")";
+            txtFeedback.color = saldo >= 0 ? btnGreen : btnRed;
+
+            AtualizarHUD();
+            VerificarGameOver();
+        }
+
+        void ClampValores()
+        {
+            satisfacao = Mathf.Clamp(satisfacao, 0, 100);
+            bemEstar = Mathf.Clamp(bemEstar, 0, 100);
+            votos = Mathf.Clamp(votos, 0, 100);
+        }
+
+        void AtualizarHUD()
+        {
+            if (txtOrcamento != null)
+            {
+                txtOrcamento.text = "$" + orcamento;
+                txtOrcamento.color = orcamento > 2000 ? btnGreen : (orcamento > 0 ? btnOrange : btnRed);
+            }
+            if (txtSatisfacao != null)
+            {
+                txtSatisfacao.text = satisfacao + "%";
+                txtSatisfacao.color = satisfacao > 50 ? btnOrange : btnRed;
+            }
+            if (txtBemEstar != null)
+            {
+                txtBemEstar.text = bemEstar + "%";
+                txtBemEstar.color = bemEstar > 40 ? btnGreen : btnRed;
+            }
+            if (txtVotos != null)
+            {
+                txtVotos.text = votos + "%";
+                txtVotos.color = votos >= 51 ? btnPurple : btnRed;
+            }
+            if (txtPopulacao != null) txtPopulacao.text = populacao + " habitantes";
+            if (txtTurno != null) txtTurno.text = "Turno " + turno;
+
+            // Barras
+            if (barraSatisfacao != null) barraSatisfacao.anchorMax = new Vector2(satisfacao / 100f, 1);
+            if (barraBemEstar != null) barraBemEstar.anchorMax = new Vector2(bemEstar / 100f, 1);
+            if (barraVotos != null) barraVotos.anchorMax = new Vector2(votos / 100f, 1);
+
+            // Resumo
+            if (txtResumo != null)
+            {
+                int renda = rendaBase + rendaComercio;
+                txtResumo.text = "Renda: $" + renda + "/turno | Manutencao: $" + custoManutencao + "/turno | " +
+                    casas + " casas, " + comercios + " comercios, " + parques + " parques";
             }
         }
 
-        private void UpdateHUD()
+        void VerificarGameOver()
         {
-            if (_moneyText != null) _moneyText.text = FormatMoney(_money);
-            if (_populationText != null) _populationText.text = _population.ToString();
-            if (_happinessText != null) _happinessText.text = _happiness + "%";
-            if (_turnText != null) _turnText.text = "Turno " + _turn;
+            string motivo = "";
+            bool perdeu = false;
+
+            if (orcamento <= 0)
+            {
+                motivo = "Sua cidade faliu! Orcamento zerado.";
+                perdeu = true;
+            }
+            else if (satisfacao <= 20)
+            {
+                motivo = "Populacao revoltada! Satisfacao muito baixa.";
+                perdeu = true;
+            }
+            else if (votos < 51)
+            {
+                motivo = "Voce perdeu as eleicoes! Menos de 51% dos votos.";
+                perdeu = true;
+            }
+
+            if (perdeu)
+            {
+                GameManager.Instance.SetGameState(GameState.GameOverLose);
+                MostrarFim(false, motivo);
+            }
+            else if (turno >= 20 && votos >= 51)
+            {
+                // Vitoria apos 20 turnos com maioria
+                GameManager.Instance.SetGameState(GameState.GameOverWin);
+                MostrarFim(true, "Voce foi reeleito com " + votos + "% dos votos!");
+            }
         }
 
-        private string FormatMoney(int amount)
+        // ==================== PAUSE ====================
+        void CriarPause()
         {
-            if (amount >= 1000000) return "$" + (amount / 1000000f).ToString("F1") + "M";
-            if (amount >= 1000) return "$" + (amount / 1000f).ToString("F1") + "K";
-            return "$" + amount;
+            _pausePanel = CriarPainel("Pause", new Color(0, 0, 0, 0.9f));
+
+            var titulo = CriarTexto(_pausePanel.transform, "PAUSADO", 48);
+            titulo.color = Color.white;
+            PosicionarCentro(titulo.gameObject, 0, 100, 400, 60);
+
+            CriarBotao(_pausePanel.transform, "CONTINUAR", btnGreen, 0, 10, 280, 60, Continuar);
+            CriarBotao(_pausePanel.transform, "REINICIAR", btnBlue, 0, -65, 280, 60, IniciarJogo);
+            CriarBotao(_pausePanel.transform, "MENU PRINCIPAL", btnRed, 0, -140, 280, 60, MostrarMenu);
         }
 
-        #endregion
-
-        #region Pause Menu
-
-        private GameObject CreatePauseMenuScreen()
+        void Pausar()
         {
-            var panel = CreatePanel("PauseMenuPanel");
-            var bg = panel.GetComponent<Image>();
-            bg.color = new Color(0, 0, 0, 0.85f);
-
-            // Container central
-            var container = CreateVerticalContainer(panel.transform, "Container");
-            var containerRect = container.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.35f, 0.3f);
-            containerRect.anchorMax = new Vector2(0.65f, 0.7f);
-            containerRect.offsetMin = Vector2.zero;
-            containerRect.offsetMax = Vector2.zero;
-
-            var containerBg = container.AddComponent<Image>();
-            containerBg.color = backgroundColor;
-
-            var layout = container.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(25, 25, 25, 25);
-
-            // Titulo
-            var title = CreateText(container.transform, "Title", "PAUSADO", 36, FontStyles.Bold);
-            title.color = accentColor;
-            title.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 50);
-
-            CreateSpacer(container.transform, 30);
-
-            // Botoes
-            CreateMenuButton(container.transform, "BtnContinuar", "> CONTINUAR", successColor, OnResumeClicked);
-            CreateSpacer(container.transform, 10);
-            CreateMenuButton(container.transform, "BtnReiniciar", "R REINICIAR", secondaryColor, OnRestartClicked);
-            CreateSpacer(container.transform, 10);
-            CreateMenuButton(container.transform, "BtnMenuPrincipal", "M MENU PRINCIPAL", dangerColor, OnMainMenuClicked);
-
-            return panel;
+            GameManager.Instance.SetGameState(GameState.Paused);
+            _pausePanel.SetActive(true);
         }
 
-        private void OnResumeClicked()
+        void Continuar()
         {
             GameManager.Instance.SetGameState(GameState.Playing);
-            _pauseMenuPanel?.SetActive(false);
+            _pausePanel.SetActive(false);
         }
 
-        private void OnRestartClicked()
+        // ==================== FIM ====================
+        void CriarFim()
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+            _endPanel = CriarPainel("Fim", new Color(0, 0, 0, 0.95f));
+
+            var titulo = CriarTexto(_endPanel.transform, "FIM", 56);
+            titulo.gameObject.name = "TituloFim";
+            PosicionarCentro(titulo.gameObject, 0, 140, 500, 70);
+
+            var msg = CriarTexto(_endPanel.transform, "Mensagem", 24);
+            msg.gameObject.name = "MsgFim";
+            PosicionarCentro(msg.gameObject, 0, 60, 600, 50);
+
+            var stats = CriarTexto(_endPanel.transform, "Stats", 20);
+            stats.gameObject.name = "StatsFim";
+            stats.alignment = TextAlignmentOptions.Center;
+            PosicionarCentro(stats.gameObject, 0, -20, 600, 120);
+
+            CriarBotao(_endPanel.transform, "JOGAR NOVAMENTE", btnGreen, 0, -130, 300, 60, IniciarJogo);
+            CriarBotao(_endPanel.transform, "MENU", btnBlue, 0, -205, 300, 60, MostrarMenu);
         }
 
-        private void OnMainMenuClicked()
+        void MostrarFim(bool vitoria, string motivo)
         {
-            _money = 10000;
-            _population = 100;
-            _happiness = 75;
-            _turn = 1;
-            GameManager.Instance.SetGameState(GameState.MainMenu);
-            ShowMainMenu();
-        }
+            EsconderTudo();
+            _endPanel.SetActive(true);
 
-        #endregion
+            var titulo = _endPanel.transform.Find("TituloFim")?.GetComponent<TMP_Text>();
+            var msg = _endPanel.transform.Find("MsgFim")?.GetComponent<TMP_Text>();
+            var stats = _endPanel.transform.Find("StatsFim")?.GetComponent<TMP_Text>();
 
-        #region Game Over Screen
-
-        private GameObject CreateGameOverScreen()
-        {
-            var panel = CreatePanel("GameOverPanel");
-            var bg = panel.GetComponent<Image>();
-            bg.color = new Color(0, 0, 0, 0.92f);
-
-            // Container
-            var container = CreateVerticalContainer(panel.transform, "Container");
-            var containerRect = container.GetComponent<RectTransform>();
-            containerRect.anchorMin = new Vector2(0.3f, 0.25f);
-            containerRect.anchorMax = new Vector2(0.7f, 0.75f);
-            containerRect.offsetMin = Vector2.zero;
-            containerRect.offsetMax = Vector2.zero;
-
-            var containerBg = container.AddComponent<Image>();
-            containerBg.color = backgroundColor;
-
-            var layout = container.GetComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(25, 25, 25, 25);
-
-            // Titulo
-            var title = CreateText(container.transform, "Title", "FIM DE JOGO", 40, FontStyles.Bold);
-            title.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 55);
-
-            // Resultado
-            var result = CreateText(container.transform, "Result", "Resultado", 26, FontStyles.Normal);
-            result.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 40);
-
-            // Estatisticas
-            var stats = CreateText(container.transform, "Stats", "Estatisticas", 16, FontStyles.Normal);
-            stats.GetComponent<RectTransform>().sizeDelta = new Vector2(0, 80);
-
-            CreateSpacer(container.transform, 25);
-
-            // Botoes
-            CreateMenuButton(container.transform, "BtnJogarNovamente", "R JOGAR NOVAMENTE", successColor, OnRestartClicked);
-            CreateSpacer(container.transform, 10);
-            CreateMenuButton(container.transform, "BtnMenu", "M MENU PRINCIPAL", secondaryColor, OnMainMenuClicked);
-
-            return panel;
-        }
-
-        private void ShowGameOver(bool victory)
-        {
-            HideAllPanels();
-            _gameOverPanel?.SetActive(true);
-            
-            var titleText = _gameOverPanel?.transform.Find("Container/Title")?.GetComponent<TMP_Text>();
-            var resultText = _gameOverPanel?.transform.Find("Container/Result")?.GetComponent<TMP_Text>();
-            var statsText = _gameOverPanel?.transform.Find("Container/Stats")?.GetComponent<TMP_Text>();
-            
-            if (titleText != null)
+            if (titulo != null)
             {
-                titleText.text = victory ? "VITORIA!" : "DERROTA";
-                titleText.color = victory ? successColor : dangerColor;
+                titulo.text = vitoria ? "VITORIA!" : "DERROTA";
+                titulo.color = vitoria ? btnGreen : btnRed;
             }
-            
-            if (resultText != null)
+            if (msg != null)
             {
-                resultText.text = victory 
-                    ? "Parabens! Sua cidade prosperou!" 
-                    : "Sua cidade faliu...";
-                resultText.color = victory ? successColor : dangerColor;
+                msg.text = motivo;
+                msg.color = Color.white;
             }
-            
-            if (statsText != null)
+            if (stats != null)
             {
-                statsText.text = "Populacao Final: " + _population + "\nTurnos: " + _turn + "\nDinheiro: " + FormatMoney(_money);
+                stats.text = "Turnos: " + turno + " | Populacao: " + populacao + "\n" +
+                    "Orcamento Final: $" + orcamento + "\n" +
+                    "Satisfacao: " + satisfacao + "% | Bem-Estar: " + bemEstar + "% | Votos: " + votos + "%\n" +
+                    "Construcoes: " + casas + " casas, " + comercios + " comercios, " + industrias + " industrias,\n" +
+                    parques + " parques, " + escolas + " escolas, " + hospitais + " hospitais";
+                stats.color = new Color(0.75f, 0.75f, 0.75f);
             }
         }
 
-        #endregion
-
-        #region Helper Methods
-
-        private GameObject CreatePanel(string name)
+        void Sair()
         {
-            var panel = new GameObject(name);
-            panel.transform.SetParent(_canvas.transform, false);
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
 
-            var rect = panel.AddComponent<RectTransform>();
+        // ==================== HELPERS ====================
+        void EsconderTudo()
+        {
+            _menuPanel?.SetActive(false);
+            _instructionsPanel?.SetActive(false);
+            _gamePanel?.SetActive(false);
+            _pausePanel?.SetActive(false);
+            _endPanel?.SetActive(false);
+        }
+
+        GameObject CriarPainel(string nome, Color cor)
+        {
+            var go = new GameObject(nome);
+            go.transform.SetParent(_canvas.transform, false);
+            var rect = go.AddComponent<RectTransform>();
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
-
-            panel.AddComponent<Image>();
-            return panel;
+            var img = go.AddComponent<Image>();
+            img.color = cor;
+            return go;
         }
 
-        private GameObject CreateVerticalContainer(Transform parent, string name)
+        GameObject CriarPainelFilho(Transform parent, string nome, Color cor)
         {
-            var container = new GameObject(name);
-            container.transform.SetParent(parent, false);
-
-            var rect = container.AddComponent<RectTransform>();
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
-
-            var layout = container.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 8;
-            layout.childAlignment = TextAnchor.UpperCenter;
-            layout.childForceExpandWidth = true;
-            layout.childForceExpandHeight = false;
-            layout.childControlWidth = true;
-            layout.childControlHeight = false;
-
-            return container;
+            var go = new GameObject(nome);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<RectTransform>();
+            var img = go.AddComponent<Image>();
+            img.color = cor;
+            return go;
         }
 
-        private TMP_Text CreateText(Transform parent, string name, string text, int fontSize, FontStyles style)
+        TMP_Text CriarTexto(Transform parent, string texto, int tamanho)
         {
-            var textObj = new GameObject(name);
-            textObj.transform.SetParent(parent, false);
-
-            textObj.AddComponent<RectTransform>();
-
-            var tmp = textObj.AddComponent<TextMeshProUGUI>();
-            tmp.text = text;
-            tmp.fontSize = fontSize;
-            tmp.fontStyle = style;
-            tmp.color = textColor;
+            var go = new GameObject("Texto");
+            go.transform.SetParent(parent, false);
+            go.AddComponent<RectTransform>();
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            tmp.text = texto;
+            tmp.fontSize = tamanho;
+            tmp.fontStyle = FontStyles.Bold;
+            tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.enableWordWrapping = true;
-            tmp.richText = true;
-
             return tmp;
         }
 
-        private void CreateSpacer(Transform parent, float height)
+        void CriarBotao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao)
         {
-            var spacer = new GameObject("Spacer");
-            spacer.transform.SetParent(parent, false);
-            var rect = spacer.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(0, height);
-            var layout = spacer.AddComponent<LayoutElement>();
-            layout.minHeight = height;
-            layout.preferredHeight = height;
+            var go = new GameObject("Btn_" + texto);
+            go.transform.SetParent(parent, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(w, h);
+
+            var img = go.AddComponent<Image>();
+            img.color = cor;
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(acao);
+
+            var colors = btn.colors;
+            colors.highlightedColor = new Color(cor.r + 0.15f, cor.g + 0.15f, cor.b + 0.15f);
+            colors.pressedColor = new Color(cor.r - 0.1f, cor.g - 0.1f, cor.b - 0.1f);
+            btn.colors = colors;
+
+            var txt = CriarTexto(go.transform, texto, 22);
+            var txtRect = txt.GetComponent<RectTransform>();
+            txtRect.anchorMin = Vector2.zero;
+            txtRect.anchorMax = Vector2.one;
+            txtRect.offsetMin = new Vector2(5, 3);
+            txtRect.offsetMax = new Vector2(-5, -3);
         }
 
-        #endregion
-
-        #region Show Methods
-
-        public void ShowMainMenu()
+        void PosicionarCentro(GameObject go, float x, float y, float w, float h)
         {
-            HideAllPanels();
-            _mainMenuPanel?.SetActive(true);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(w, h);
         }
 
-        public void ShowInstructions()
+        void PosicionarTopo(GameObject go, float altura)
         {
-            HideAllPanels();
-            _instructionsPanel?.SetActive(true);
+            var rect = go.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0, 1);
+            rect.anchorMax = new Vector2(1, 1);
+            rect.pivot = new Vector2(0.5f, 1);
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = new Vector2(0, altura);
         }
 
-        public void ShowGameHUD()
+        void Update()
         {
-            HideAllPanels();
-            _gameHUDPanel?.SetActive(true);
-            UpdateHUD();
-        }
-
-        public void ShowPauseMenu()
-        {
-            _pauseMenuPanel?.SetActive(true);
-        }
-
-        public void ShowGameOver()
-        {
-            HideAllPanels();
-            _gameOverPanel?.SetActive(true);
-        }
-
-        #endregion
-
-        private void Update()
-        {
-            // Tecla ESC para pausar/despausar
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (GameManager.Instance.CurrentState == GameState.Playing)
-                {
-                    OnPauseClicked();
-                }
+                    Pausar();
                 else if (GameManager.Instance.CurrentState == GameState.Paused)
-                {
-                    OnResumeClicked();
-                }
-                else if (GameManager.Instance.CurrentState == GameState.Instructions)
-                {
-                    OnBackToMenuClicked();
-                }
+                    Continuar();
+                else if (_instructionsPanel.activeSelf)
+                    MostrarMenu();
             }
         }
     }
