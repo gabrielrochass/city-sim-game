@@ -2,11 +2,15 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using CitySim.Core;
+using CitySim.Systems.Grid;
 
 namespace CitySim.UI
 {
     public class UISetup : MonoBehaviour
     {
+        [Header("Grid Building System")]
+        [SerializeField] private GridBuildingSytem gridBuildingSystem;
+        [SerializeField] private GameObject housePrefab; // Prefab da casa que será usado para todas as construções
         // Cores
         private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
         private Color panelColor = new Color(0.08f, 0.1f, 0.14f, 0.98f);
@@ -306,112 +310,137 @@ namespace CitySim.UI
 
         void Construir(string tipo)
         {
+            int custo = GetCustoConstrucao(tipo);
+
+            // Verificar se tem orçamento
+            if (orcamento < custo)
+            {
+                txtFeedback.text = "Orcamento insuficiente! Precisa de $" + custo;
+                txtFeedback.color = btnRed;
+                return;
+            }
+
+            // Verificar se o GridBuildingSystem e o prefab estão configurados
+            if (gridBuildingSystem == null)
+            {
+                txtFeedback.text = "ERRO: GridBuildingSystem nao configurado!";
+                txtFeedback.color = btnRed;
+                return;
+            }
+
+            if (housePrefab == null)
+            {
+                txtFeedback.text = "ERRO: Prefab da construcao nao configurado!";
+                txtFeedback.color = btnRed;
+                return;
+            }
+
+            // Esconder painel de UI
+            _gamePanel.SetActive(false);
+            
+            // Iniciar modo de colocação no grid
+            gridBuildingSystem.InitializeBuildingWithType(housePrefab, tipo);
+        }
+
+        int GetCustoConstrucao(string tipo)
+        {
+            switch (tipo)
+            {
+                case "casa": return 800;
+                case "comercio": return 1200;
+                case "industria": return 2000;
+                case "parque": return 600;
+                case "escola": return 1500;
+                case "hospital": return 2500;
+                default: return 0;
+            }
+        }
+
+        // Método público para mostrar o painel de jogo novamente
+        public void ShowGamePanel()
+        {
+            _gamePanel.SetActive(true);
+        }
+        
+        // Método público para ser chamado pelo GridBuildingSystem quando o prédio for colocado
+        public void OnBuildingPlaced(string tipo)
+        {
             int custo = 0;
             string msg = "";
-            bool sucesso = false;
 
             switch (tipo)
             {
                 case "casa":
                     custo = 800;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        populacao += 50;
-                        satisfacao += 3;
-                        casas++;
-                        custoManutencao += 20;
-                        msg = "+50 habitantes! Satisfacao +3%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    populacao += 50;
+                    satisfacao += 3;
+                    casas++;
+                    custoManutencao += 20;
+                    msg = "+50 habitantes! Satisfacao +3%";
                     break;
 
                 case "comercio":
                     custo = 1200;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        rendaComercio += 200;
-                        satisfacao += 2;
-                        comercios++;
-                        msg = "+$200/turno! Satisfacao +2%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    rendaComercio += 200;
+                    satisfacao += 2;
+                    comercios++;
+                    msg = "+$200/turno! Satisfacao +2%";
                     break;
 
                 case "industria":
                     custo = 2000;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        rendaComercio += 400;
-                        bemEstar -= 5;
-                        votos -= 2;
-                        industrias++;
-                        msg = "+$400/turno! Mas bem-estar -5%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    rendaComercio += 400;
+                    bemEstar -= 5;
+                    votos -= 2;
+                    industrias++;
+                    msg = "+$400/turno! Mas bem-estar -5%";
                     break;
 
                 case "parque":
                     custo = 600;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        bemEstar += 8;
-                        votos += 3;
-                        satisfacao += 2;
-                        parques++;
-                        custoManutencao += 30;
-                        msg = "Bem-estar +8%! Votos +3%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    bemEstar += 8;
+                    votos += 3;
+                    satisfacao += 2;
+                    parques++;
+                    custoManutencao += 30;
+                    msg = "Bem-estar +8%! Votos +3%";
                     break;
 
                 case "escola":
                     custo = 1500;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        satisfacao += 6;
-                        votos += 4;
-                        escolas++;
-                        custoManutencao += 80;
-                        msg = "Satisfacao +6%! Votos +4%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    satisfacao += 6;
+                    votos += 4;
+                    escolas++;
+                    custoManutencao += 80;
+                    msg = "Satisfacao +6%! Votos +4%";
                     break;
 
                 case "hospital":
                     custo = 2500;
-                    if (orcamento >= custo)
-                    {
-                        orcamento -= custo;
-                        bemEstar += 10;
-                        votos += 5;
-                        satisfacao += 3;
-                        hospitais++;
-                        custoManutencao += 150;
-                        msg = "Bem-estar +10%! Votos +5%";
-                        sucesso = true;
-                    }
+                    orcamento -= custo;
+                    bemEstar += 10;
+                    votos += 5;
+                    satisfacao += 3;
+                    hospitais++;
+                    custoManutencao += 150;
+                    msg = "Bem-estar +10%! Votos +5%";
                     break;
             }
 
-            if (sucesso)
-            {
-                txtFeedback.text = msg;
-                txtFeedback.color = btnGreen;
-            }
-            else
-            {
-                txtFeedback.text = "Orcamento insuficiente! Precisa de $" + custo;
-                txtFeedback.color = btnRed;
-            }
+            txtFeedback.text = msg;
+            txtFeedback.color = btnGreen;
 
             ClampValores();
             AtualizarHUD();
             VerificarGameOver();
+            
+            // Mostrar painel novamente
+            ShowGamePanel();
         }
 
         void ProximoTurno()
