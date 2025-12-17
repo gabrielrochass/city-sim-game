@@ -29,6 +29,9 @@ namespace CitySim.UI
         [SerializeField] private float cardSpacing = 30f;
         [SerializeField] private float hoverScale = 1.1f; // Escala ao passar o mouse
 
+        [Header("Visual")]
+        [SerializeField] private Sprite cardBackgroundSprite; // Background PNG das cartas
+
         private List<GameObject> _currentCardObjects = new List<GameObject>();
         private Dictionary<RectTransform, Coroutine> _activeAnimations = new Dictionary<RectTransform, Coroutine>();
         private Dictionary<Image, Color> _originalColors = new Dictionary<Image, Color>();
@@ -44,6 +47,14 @@ namespace CitySim.UI
                 Debug.Log($"[ActionCardUI] CardPanel parent: {(cardPanel.transform.parent != null ? cardPanel.transform.parent.name : "NULL")}");
                 Debug.Log($"[ActionCardUI] CardPanel tem Image? {cardPanel.GetComponent<Image>() != null}");
                 Debug.Log($"[ActionCardUI] CardPanel tem RectTransform? {cardPanel.GetComponent<RectTransform>() != null}");
+                
+                // Configura o background do painel para mostrar o sprite corretamente
+                Image panelImage = cardPanel.GetComponent<Image>();
+                if (panelImage != null)
+                {
+                    panelImage.color = Color.white; // Garante que o sprite apareça sem tint
+                    Debug.Log("[ActionCardUI] CardPanel Image configurado com cor branca");
+                }
                 
                 var rect = cardPanel.GetComponent<RectTransform>();
                 if (rect != null)
@@ -111,14 +122,6 @@ namespace CitySim.UI
             {
                 Debug.Log("[ActionCardUI] Ativando CardPanel!");
                 cardPanel.SetActive(true);
-                
-                // Configura background preto
-                var img = cardPanel.GetComponent<Image>();
-                if (img != null)
-                {
-                    img.color = new Color(0.05f, 0.05f, 0.05f, 0.95f); // Preto semi-transparente
-                    Debug.Log($"[ActionCardUI] Background configurado para preto");
-                }
                 
                 var rect = cardPanel.GetComponent<RectTransform>();
                 if (rect != null)
@@ -202,7 +205,17 @@ namespace CitySim.UI
 
             // Background
             Image bg = cardObj.AddComponent<Image>();
-            bg.color = card.cardColor;
+            
+            // Usa sprite se disponível, senão usa cor sólida
+            if (cardBackgroundSprite != null)
+            {
+                bg.sprite = cardBackgroundSprite;
+                bg.color = Color.white; // Sem tint, apenas o sprite
+            }
+            else
+            {
+                bg.color = Color.white; // Branco como fallback
+            }
             
             // Adiciona outline para destacar a carta
             Outline outline = cardObj.AddComponent<Outline>();
@@ -210,7 +223,7 @@ namespace CitySim.UI
             outline.effectDistance = new Vector2(3, -3);
             
             // Salva cor original para hover
-            _originalColors[bg] = card.cardColor;
+            _originalColors[bg] = bg.color;
 
             // Painel interno com padding
             GameObject contentPanel = new GameObject("Content");
@@ -229,13 +242,13 @@ namespace CitySim.UI
             titleText.fontSize = 22;
             titleText.fontStyle = FontStyles.Bold;
             titleText.alignment = TextAlignmentOptions.Center;
-            titleText.color = Color.white;
+            titleText.color = Color.black;
             
             RectTransform titleRect = titleObj.GetComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0, 1);
             titleRect.anchorMax = new Vector2(1, 1);
             titleRect.pivot = new Vector2(0.5f, 1);
-            titleRect.anchoredPosition = Vector2.zero;
+            titleRect.anchoredPosition = new Vector2(0, -10); // Espaçamento maior para cima
             titleRect.sizeDelta = new Vector2(0, 50);
 
             // Descrição
@@ -245,15 +258,15 @@ namespace CitySim.UI
             descText.text = card.description;
             descText.fontSize = 22;
             descText.alignment = TextAlignmentOptions.TopLeft;
-            descText.color = new Color(0.9f, 0.9f, 0.9f);
+            descText.color = Color.black;
             descText.enableWordWrapping = true;
             
             RectTransform descRect = descObj.GetComponent<RectTransform>();
             descRect.anchorMin = new Vector2(0, 0.5f);
             descRect.anchorMax = new Vector2(1, 1);
             descRect.pivot = new Vector2(0.5f, 1);
-            descRect.anchoredPosition = new Vector2(0, -55);
-            descRect.sizeDelta = new Vector2(0, 0);
+            descRect.anchoredPosition = new Vector2(0, -65);
+            descRect.sizeDelta = new Vector2(-60, 0); // Padding lateral de 30px em cada lado
 
             // Efeitos
             GameObject effectsObj = new GameObject("Effects");
@@ -262,7 +275,7 @@ namespace CitySim.UI
             effectsText.text = card.GetEffectsSummary();
             effectsText.fontSize = 20;
             effectsText.alignment = TextAlignmentOptions.Center;
-            effectsText.color = Color.yellow;
+            effectsText.color = Color.black;
             effectsText.enableWordWrapping = true;
             
             RectTransform effectsRect = effectsObj.GetComponent<RectTransform>();
@@ -271,23 +284,6 @@ namespace CitySim.UI
             effectsRect.pivot = new Vector2(0.5f, 0);
             effectsRect.anchoredPosition = new Vector2(0, 10);
             effectsRect.sizeDelta = new Vector2(0, 0);
-
-            // Texto de instrução (substitui botão)
-            GameObject hintObj = new GameObject("ClickHint");
-            hintObj.transform.SetParent(contentPanel.transform, false);
-            TMP_Text hintText = hintObj.AddComponent<TextMeshProUGUI>();
-            hintText.text = "Clique para jogar";
-            hintText.fontSize = 16;
-            hintText.fontStyle = FontStyles.Italic;
-            hintText.alignment = TextAlignmentOptions.Center;
-            hintText.color = new Color(1f, 1f, 1f, 0.6f);
-            
-            RectTransform hintRect = hintObj.GetComponent<RectTransform>();
-            hintRect.anchorMin = new Vector2(0, 0);
-            hintRect.anchorMax = new Vector2(1, 0);
-            hintRect.pivot = new Vector2(0.5f, 0);
-            hintRect.anchoredPosition = new Vector2(0, 5);
-            hintRect.sizeDelta = new Vector2(0, 30);
 
             return cardObj;
         }
