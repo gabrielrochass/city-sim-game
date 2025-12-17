@@ -16,11 +16,11 @@ MonoBehaviour:
   description: "Chuvas fortes causam alagamentos e preju\xEDzos ao com\xE9rcio local."
   type: 4
   budgetCost: 0
-  satisfactionEffect: -12
-  wellbeingEffect: -8
-  votesEffect: -8
+  satisfactionEffect: -15
+  wellbeingEffect: -10
+  votesEffect: -10
   populationEffect: 0
-  incomePerTurnEffect: -150
+  incomePerTurnEffect: -200
   maintenanceCostEffect: 0
   cardColor: {r: 0.8, g: 0.25, b: 0.25, a: 1}
   cardIcon: {fileID: 0}

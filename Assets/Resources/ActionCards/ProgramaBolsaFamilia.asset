@@ -16,12 +16,12 @@ MonoBehaviour:
   description: "Distribuir cestas b\xE1sicas e aux\xEDlio \xE0s fam\xEDlias carentes.
     Ganha votos e satisfa\xE7\xE3o."
   type: 3
-  budgetCost: 2500
-  satisfactionEffect: 15
-  wellbeingEffect: 8
-  votesEffect: 12
+  budgetCost: 4000
+  satisfactionEffect: 12
+  wellbeingEffect: 6
+  votesEffect: 10
   populationEffect: 0
   incomePerTurnEffect: 0
-  maintenanceCostEffect: 80
+  maintenanceCostEffect: 100
   cardColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
   cardIcon: {fileID: 0}

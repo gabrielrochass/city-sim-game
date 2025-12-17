@@ -17,9 +17,9 @@ MonoBehaviour:
     manchada."
   type: 4
   budgetCost: 0
-  satisfactionEffect: -20
-  wellbeingEffect: -5
-  votesEffect: -25
+  satisfactionEffect: -22
+  wellbeingEffect: -6
+  votesEffect: -28
   populationEffect: 0
   incomePerTurnEffect: 0
   maintenanceCostEffect: 0

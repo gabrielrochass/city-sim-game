@@ -17,9 +17,9 @@ MonoBehaviour:
     sobrecarregado."
   type: 4
   budgetCost: 0
-  satisfactionEffect: -10
-  wellbeingEffect: -20
-  votesEffect: -12
+  satisfactionEffect: -12
+  wellbeingEffect: -25
+  votesEffect: -15
   populationEffect: 0
   incomePerTurnEffect: 0
   maintenanceCostEffect: 0

@@ -15,12 +15,12 @@ MonoBehaviour:
   cardName: Feira do Produtor Rural
   description: Valoriza o agricultor local e movimenta a economia, mas falta saneamento.
   type: 5
-  budgetCost: 800
-  satisfactionEffect: 8
-  wellbeingEffect: -2
-  votesEffect: 5
+  budgetCost: 1500
+  satisfactionEffect: 6
+  wellbeingEffect: -3
+  votesEffect: 4
   populationEffect: 0
-  incomePerTurnEffect: 150
+  incomePerTurnEffect: 180
   maintenanceCostEffect: 0
   cardColor: {r: 0.9, g: 0.6, b: 0.1, a: 1}
   cardIcon: {fileID: 0}

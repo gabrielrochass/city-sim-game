@@ -17,11 +17,11 @@ MonoBehaviour:
     reclamam."
   type: 4
   budgetCost: 0
-  satisfactionEffect: -15
-  wellbeingEffect: -12
-  votesEffect: -10
-  populationEffect: -30
-  incomePerTurnEffect: -200
+  satisfactionEffect: -18
+  wellbeingEffect: -15
+  votesEffect: -12
+  populationEffect: 0
+  incomePerTurnEffect: -250
   maintenanceCostEffect: 0
   cardColor: {r: 0.8, g: 0.25, b: 0.25, a: 1}
   cardIcon: {fileID: 0}

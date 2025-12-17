@@ -15,10 +15,10 @@ MonoBehaviour:
   cardName: Parceria com Igreja
   description: "Pastor te apoia do p\xFAlpito. \xD3timo para votos, mas causa divis\xE3o."
   type: 5
-  budgetCost: 300
-  satisfactionEffect: -5
-  wellbeingEffect: -3
-  votesEffect: 15
+  budgetCost: 800
+  satisfactionEffect: -6
+  wellbeingEffect: -4
+  votesEffect: 14
   populationEffect: 0
   incomePerTurnEffect: 0
   maintenanceCostEffect: 0
