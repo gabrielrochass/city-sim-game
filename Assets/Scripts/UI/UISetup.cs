@@ -27,6 +27,7 @@ namespace CitySim.UI
         [SerializeField] private Sprite playButtonSprite;
         [SerializeField] private Sprite howToPlayButtonSprite;
         [SerializeField] private Sprite exitButtonSprite;
+        [SerializeField] private Sprite genericButtonSprite; // Botões genéricos (voltar, menu, próximo turno, etc)
         
         // Cores
         private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
@@ -141,11 +142,28 @@ namespace CitySim.UI
         // ==================== INSTRUCOES ====================
         void CriarInstrucoes()
         {
-            _instructionsPanel = CriarPainel("Instrucoes", bgColor);
+            _instructionsPanel = CriarPainel("Instrucoes", bgColor, menuBackgroundSprite);
 
             var titulo = CriarTexto(_instructionsPanel.transform, "COMO JOGAR", 48);
-            titulo.color = btnOrange;
+            titulo.color = Color.white;
             PosicionarCentro(titulo.gameObject, 0, 280, 500, 60);
+
+            // Card semi-transparente para as instruções
+            var card = new GameObject("InstructionsCard");
+            card.transform.SetParent(_instructionsPanel.transform, false);
+            var cardRect = card.AddComponent<RectTransform>();
+            cardRect.anchorMin = new Vector2(0.5f, 0.5f);
+            cardRect.anchorMax = new Vector2(0.5f, 0.5f);
+            cardRect.anchoredPosition = new Vector2(0, -20);
+            cardRect.sizeDelta = new Vector2(750, 500);
+            
+            var cardImg = card.AddComponent<Image>();
+            cardImg.color = new Color(0.1f, 0.1f, 0.15f, 0.85f); // Azul escuro semi-transparente
+            
+            // Adiciona contorno ao card
+            var outline = card.AddComponent<Outline>();
+            outline.effectColor = new Color(0.3f, 0.5f, 0.8f, 0.6f);
+            outline.effectDistance = new Vector2(2, -2);
 
             string txt = "<b><color=#4A90D9>OBJETIVO</color></b>\n" +
                 "Governe bem por 18 turnos e conquiste 51% dos votos!\n\n" +
@@ -162,14 +180,18 @@ namespace CitySim.UI
                 "Escola: +satisfacao, +votos, +bem-estar\n" +
                 "Hospital: ++bem-estar, +votos (muito caro!)\n\n" +
                 "<b><color=#E74C3C>IMPEACHMENT</color></b>\n" +
-                "Se Satisfacao E Bem-Estar <= 10%: Voce sera destituido!";
+                "Se QUALQUER indicador < 15%: Voce sera destituido!";
 
-            var instrucoes = CriarTexto(_instructionsPanel.transform, txt, 18);
+            var instrucoes = CriarTexto(card.transform, txt, 18);
             instrucoes.alignment = TextAlignmentOptions.Left;
             instrucoes.enableWordWrapping = true;
-            PosicionarCentro(instrucoes.gameObject, 0, -20, 700, 450);
+            var instRect = instrucoes.GetComponent<RectTransform>();
+            instRect.anchorMin = Vector2.zero;
+            instRect.anchorMax = Vector2.one;
+            instRect.offsetMin = new Vector2(30, 30); // Padding interno
+            instRect.offsetMax = new Vector2(-30, -30);
 
-            CriarBotao(_instructionsPanel.transform, "VOLTAR", btnBlue, 0, -300, 250, 55, MostrarMenu);
+            CriarBotao(_instructionsPanel.transform, "VOLTAR", Color.white, 0, -300, 250, 70, MostrarMenu, genericButtonSprite, true, false, true);
         }
 
         void MostrarInstrucoes()
@@ -210,12 +232,12 @@ namespace CitySim.UI
 
             // === CONSTRUCOES ===
             var tituloConst = CriarTexto(_gamePanel.transform, "CONSTRUIR", 24);
-            tituloConst.color = btnOrange;
+            tituloConst.color = Color.white;
             PosicionarCentro(tituloConst.gameObject, 0, 110, 200, 35);
 
             // Grid de construcoes 3x2
-            float bw = 200, bh = 75;
-            float espacoX = 220, espacoY = 90;
+            float bw = 270, bh = 110;
+            float espacoX = 290, espacoY = 115;
             
             CriarBotaoConstrucao(_gamePanel.transform, "CASA DE IMPOSTOS\n$1000 | +$300/t", new Color(0.7f, 0.6f, 0.2f), -espacoX, 30, bw, bh, () => Construir("casa_impostos"));
             CriarBotaoConstrucao(_gamePanel.transform, "COMERCIO\n$1500 | +$250/t", btnGreen, 0, 30, bw, bh, () => Construir("comercio"));
@@ -227,17 +249,17 @@ namespace CitySim.UI
 
             // === FEEDBACK ===
             txtFeedback = CriarTexto(_gamePanel.transform, "", 22);
-            txtFeedback.color = Color.yellow;
-            PosicionarCentro(txtFeedback.gameObject, 0, -110, 600, 40);
+            txtFeedback.color = Color.white;
+            PosicionarCentro(txtFeedback.gameObject, 0, -145, 600, 40);
 
             // === RESUMO FINANCEIRO ===
             txtResumo = CriarTexto(_gamePanel.transform, "", 18);
-            txtResumo.color = new Color(0.7f, 0.7f, 0.7f);
-            PosicionarCentro(txtResumo.gameObject, 0, -150, 600, 30);
+            txtResumo.color = Color.white;
+            PosicionarCentro(txtResumo.gameObject, 0, -195, 600, 30);
 
             // === BARRA INFERIOR ===
-            CriarBotao(_gamePanel.transform, "PROXIMO TURNO", btnOrange, 120, -220, 280, 60, ProximoTurno);
-            CriarBotao(_gamePanel.transform, "MENU", new Color(0.35f, 0.35f, 0.4f), -180, -220, 140, 60, Pausar);
+            CriarBotao(_gamePanel.transform, "PROXIMO TURNO", Color.white, 120, -260, 280, 75, ProximoTurno, genericButtonSprite, true, false, true);
+            CriarBotao(_gamePanel.transform, "MENU", Color.white, -180, -260, 140, 75, Pausar, genericButtonSprite, true, false, true);
 
             AtualizarHUD();
         }
@@ -294,18 +316,28 @@ namespace CitySim.UI
             rect.sizeDelta = new Vector2(w, h);
 
             var img = go.AddComponent<Image>();
-            img.color = new Color(cor.r * 0.7f, cor.g * 0.7f, cor.b * 0.7f, 0.95f);
+            if (genericButtonSprite != null)
+            {
+                img.sprite = genericButtonSprite;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = new Color(cor.r * 0.7f, cor.g * 0.7f, cor.b * 0.7f, 0.95f);
+            }
 
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(acao);
 
+            // Hover claro igual aos botões genéricos
             var colors = btn.colors;
-            colors.highlightedColor = cor;
-            colors.pressedColor = new Color(cor.r * 0.5f, cor.g * 0.5f, cor.b * 0.5f);
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
             btn.colors = colors;
 
-            var txt = CriarTexto(go.transform, texto, 16);
+            var txt = CriarTexto(go.transform, texto, 19);
             txt.enableWordWrapping = true;
             var txtRect = txt.GetComponent<RectTransform>();
             txtRect.anchorMin = Vector2.zero;
@@ -347,7 +379,7 @@ namespace CitySim.UI
             if (orcamento < custo)
             {
                 txtFeedback.text = "Orcamento insuficiente! Precisa de $" + custo;
-                txtFeedback.color = btnRed;
+                txtFeedback.color = Color.white;
                 return;
             }
 
@@ -355,7 +387,7 @@ namespace CitySim.UI
             if (gridBuildingSystem == null)
             {
                 txtFeedback.text = "ERRO: GridBuildingSystem nao configurado!";
-                txtFeedback.color = btnRed;
+                txtFeedback.color = Color.white;
                 return;
             }
 
@@ -365,7 +397,7 @@ namespace CitySim.UI
             if (prefabToUse == null)
             {
                 txtFeedback.text = "ERRO: Prefab para " + tipo + " nao configurado!";
-                txtFeedback.color = btnRed;
+                txtFeedback.color = Color.white;
                 return;
             }
 
@@ -486,7 +518,7 @@ namespace CitySim.UI
             }
 
             txtFeedback.text = msg;
-            txtFeedback.color = btnGreen;
+            txtFeedback.color = Color.white;
 
             ClampValores();
             AtualizarHUD();
@@ -526,7 +558,7 @@ namespace CitySim.UI
 
             string saldoStr = saldo >= 0 ? "+$" + saldo : "-$" + Mathf.Abs(saldo);
             txtFeedback.text = "Turno " + turno + "! " + saldoStr + " (Renda: $" + renda + " - Custos: $" + custos + ")";
-            txtFeedback.color = saldo >= 0 ? btnGreen : btnRed;
+            txtFeedback.color = Color.white;
 
             AtualizarHUD();
             VerificarGameOver();
@@ -662,9 +694,13 @@ namespace CitySim.UI
             string motivo = "";
             bool perdeu = false;
 
-            if (satisfacao <= 10 && bemEstar <= 10)
+            if (satisfacao < 15 || bemEstar < 15 || votos < 15)
             {
-                motivo = "IMPEACHMENT! Satisfacao e Bem-Estar criticos. Voce foi destituido do cargo!";
+                motivo = "IMPEACHMENT! ";
+                if (satisfacao < 15) motivo += "Satisfacao critica! ";
+                if (bemEstar < 15) motivo += "Bem-Estar critico! ";
+                if (votos < 15) motivo += "Votos criticos! ";
+                motivo += "Voce foi destituido do cargo!";
                 perdeu = true;
             }
 
@@ -690,9 +726,9 @@ namespace CitySim.UI
             titulo.color = Color.white;
             PosicionarCentro(titulo.gameObject, 0, 100, 400, 60);
 
-            CriarBotao(_pausePanel.transform, "CONTINUAR", btnGreen, 0, 10, 280, 60, Continuar);
-            CriarBotao(_pausePanel.transform, "REINICIAR", btnBlue, 0, -65, 280, 60, IniciarJogo);
-            CriarBotao(_pausePanel.transform, "MENU PRINCIPAL", btnRed, 0, -140, 280, 60, MostrarMenu);
+            CriarBotao(_pausePanel.transform, "CONTINUAR", Color.white, 0, 10, 280, 75, Continuar, genericButtonSprite, true, false, true);
+            CriarBotao(_pausePanel.transform, "REINICIAR", Color.white, 0, -65, 280, 75, IniciarJogo, genericButtonSprite, true, false, true);
+            CriarBotao(_pausePanel.transform, "MENU PRINCIPAL", Color.white, 0, -140, 280, 75, MostrarMenu, genericButtonSprite, true, false, true);
         }
 
         void Pausar()
@@ -725,8 +761,8 @@ namespace CitySim.UI
             stats.alignment = TextAlignmentOptions.Center;
             PosicionarCentro(stats.gameObject, 0, -20, 600, 120);
 
-            CriarBotao(_endPanel.transform, "JOGAR NOVAMENTE", btnGreen, 0, -130, 300, 60, IniciarJogo);
-            CriarBotao(_endPanel.transform, "MENU", btnBlue, 0, -205, 300, 60, MostrarMenu);
+            CriarBotao(_endPanel.transform, "JOGAR NOVAMENTE", Color.white, 0, -130, 300, 75, IniciarJogo, genericButtonSprite, true, false, true);
+            CriarBotao(_endPanel.transform, "MENU", Color.white, 0, -205, 300, 75, MostrarMenu, genericButtonSprite, true, false, true);
         }
 
         void MostrarFim(bool vitoria, string motivo)
@@ -824,10 +860,15 @@ namespace CitySim.UI
             tmp.color = Color.white;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.enableWordWrapping = true;
+            
+            // Adiciona outline (delineado) preto para melhor legibilidade
+            tmp.outlineWidth = 0.7f;
+            tmp.outlineColor = Color.black;
+            
             return tmp;
         }
 
-        void CriarBotao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao, Sprite sprite = null, bool showText = true, bool useShadowHover = false)
+        void CriarBotao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao, Sprite sprite = null, bool showText = true, bool useShadowHover = false, bool lightHover = false)
         {
             var go = new GameObject("Btn_" + texto);
             go.transform.SetParent(parent, false);
@@ -880,6 +921,15 @@ namespace CitySim.UI
                 entryExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
                 entryExit.callback.AddListener((data) => { shadow.enabled = false; });
                 trigger.triggers.Add(entryExit);
+            }
+            else if (lightHover)
+            {
+                // Hover com overlay preto bem claro
+                var colors = btn.colors;
+                colors.normalColor = Color.white;
+                colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f, 1f); // Preto bem claro
+                colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+                btn.colors = colors;
             }
             else
             {

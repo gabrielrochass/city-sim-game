@@ -1062,11 +1062,12 @@ MonoBehaviour:
   hospitalPrefab: {fileID: 7283191869397006060, guid: 06f9710d9dc7e624a81d8bf48b604309, type: 3}
   menuBackgroundSprite: {fileID: 21300000, guid: 82fca5e2f6088954da415ca31611f762, type: 3}
   gameBackgroundSprite: {fileID: 21300000, guid: 82fca5e2f6088954da415ca31611f762, type: 3}
-  titleSprite: {fileID: 21300000, guid: 4df122d9be40b5a4990e2143e6d69318, type: 3}
+  titleSprite: {fileID: 21300000, guid: 874b7e4ad15891842a1d034b71932e46, type: 3}
   menuButtonsContainerSprite: {fileID: 21300000, guid: 964a40534204b364dbc07470875f0762, type: 3}
   playButtonSprite: {fileID: 21300000, guid: f1469dbf5f8af214a8fe4c0ea4d814e1, type: 3}
   howToPlayButtonSprite: {fileID: 21300000, guid: 479a0ae9879830044ab9079f6708dc69, type: 3}
   exitButtonSprite: {fileID: 21300000, guid: c15a043c2e4e55244b2718a408268436, type: 3}
+  genericButtonSprite: {fileID: 21300000, guid: 4ce5bf1cf90ae20468928f1f38c41ccf, type: 3}
 --- !u!1 &1357924680
 GameObject:
   m_ObjectHideFlags: 0
