@@ -15,12 +15,12 @@ MonoBehaviour:
   cardName: "Campanha de Vacina\xE7\xE3o"
   description: "Mobiliza\xE7\xE3o de sa\xFAde preventiva com apoio do governo estadual."
   type: 3
-  budgetCost: 800
-  satisfactionEffect: 5
-  wellbeingEffect: 15
-  votesEffect: 7
+  budgetCost: 2000
+  satisfactionEffect: 4
+  wellbeingEffect: 12
+  votesEffect: 6
   populationEffect: 0
   incomePerTurnEffect: 0
-  maintenanceCostEffect: 30
+  maintenanceCostEffect: 40
   cardColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
   cardIcon: {fileID: 0}

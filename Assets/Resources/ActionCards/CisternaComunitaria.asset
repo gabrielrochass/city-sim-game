@@ -16,12 +16,12 @@ MonoBehaviour:
   description: "\xC1gua de qualidade no sert\xE3o vale ouro. Projeto com verba federal,
     mas voc\xEA leva o cr\xE9dito."
   type: 3
-  budgetCost: 1500
-  satisfactionEffect: 8
-  wellbeingEffect: 12
-  votesEffect: 8
+  budgetCost: 3000
+  satisfactionEffect: 6
+  wellbeingEffect: 10
+  votesEffect: 7
   populationEffect: 0
   incomePerTurnEffect: 0
-  maintenanceCostEffect: 50
+  maintenanceCostEffect: 60
   cardColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
   cardIcon: {fileID: 0}

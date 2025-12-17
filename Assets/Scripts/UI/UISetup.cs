@@ -28,15 +28,14 @@ namespace CitySim.UI
         private GameObject _endPanel;
 
         // === INDICADORES ===
-        private int orcamento = 10000;      // Dinheiro
+        private int orcamento = 8000;       // Dinheiro
         private int satisfacao = 70;        // 0-100%
         private int bemEstar = 60;          // 0-100%
         private int votos = 55;             // 0-100%
-        private int populacao = 100;
         private int turno = 1;
 
         // Renda e custos por turno
-        private int rendaBase = 500;
+        private int rendaBase = 400;
         private int rendaComercio = 0;
         private int custoManutencao = 0;
 
@@ -53,7 +52,6 @@ namespace CitySim.UI
         private TMP_Text txtSatisfacao;
         private TMP_Text txtBemEstar;
         private TMP_Text txtVotos;
-        private TMP_Text txtPopulacao;
         private TMP_Text txtTurno;
         private TMP_Text txtFeedback;
         private TMP_Text txtResumo;
@@ -112,21 +110,21 @@ namespace CitySim.UI
             PosicionarCentro(titulo.gameObject, 0, 280, 500, 60);
 
             string txt = "<b><color=#4A90D9>OBJETIVO</color></b>\n" +
-                "Administre sua cidade e seja reeleito!\n\n" +
+                "Governe bem por 18 turnos e conquiste 51% dos votos!\n\n" +
                 "<b><color=#4A90D9>INDICADORES</color></b>\n" +
-                "<color=#50C878>[$] Orcamento</color> - Seu dinheiro. Se zerar, GAME OVER!\n" +
-                "<color=#F5A623>[S] Satisfacao</color> - Felicidade do povo. Minimo 20%!\n" +
+                "<color=#50C878>[$] Orcamento</color> - Seu dinheiro para investir.\n" +
+                "<color=#F5A623>[S] Satisfacao</color> - Felicidade do povo.\n" +
                 "<color=#50C878>[B] Bem-Estar</color> - Saude e qualidade de vida.\n" +
-                "<color=#9B59B6>[V] Votos</color> - Sua aprovacao. Precisa de maioria (51%)!\n\n" +
+                "<color=#9B59B6>[V] Votos</color> - Sua aprovacao. Precisa de 51% para vencer!\n\n" +
                 "<b><color=#4A90D9>CONSTRUCOES</color></b>\n" +
-                "Casa: +50 pop, +satisfacao\n" +
+                "Casa de Impostos: ++renda, --satisfacao/bem-estar\n" +
                 "Comercio: +renda, +satisfacao\n" +
-                "Industria: ++renda, -bem-estar\n" +
+                "Industria: ++renda, --bem-estar (alto custo)\n" +
                 "Parque: +bem-estar, +votos\n" +
-                "Escola: +satisfacao, +votos\n" +
-                "Hospital: +bem-estar, +votos\n\n" +
-                "<b><color=#E74C3C>GAME OVER</color></b>\n" +
-                "Orcamento <= 0 | Satisfacao <= 20% | Votos < 51%";
+                "Escola: +satisfacao, +votos, +bem-estar\n" +
+                "Hospital: ++bem-estar, +votos (muito caro!)\n\n" +
+                "<b><color=#E74C3C>IMPEACHMENT</color></b>\n" +
+                "Se Satisfacao E Bem-Estar <= 10%: Voce sera destituido!";
 
             var instrucoes = CriarTexto(_instructionsPanel.transform, txt, 18);
             instrucoes.alignment = TextAlignmentOptions.Left;
@@ -166,15 +164,11 @@ namespace CitySim.UI
 
             // === INFO CENTRAL ===
             var infoPanel = CriarPainelFilho(_gamePanel.transform, "InfoPanel", new Color(0, 0, 0, 0.3f));
-            PosicionarCentro(infoPanel, 0, 180, 400, 70);
+            PosicionarCentro(infoPanel, 0, 180, 400, 50);
 
-            txtPopulacao = CriarTexto(infoPanel.transform, "100 habitantes", 28);
-            txtPopulacao.color = Color.white;
-            PosicionarCentro(txtPopulacao.gameObject, 0, 10, 380, 35);
-
-            txtTurno = CriarTexto(infoPanel.transform, "Turno 1", 22);
-            txtTurno.color = new Color(0.7f, 0.7f, 0.7f);
-            PosicionarCentro(txtTurno.gameObject, 0, -18, 380, 30);
+            txtTurno = CriarTexto(infoPanel.transform, "Turno 1", 28);
+            txtTurno.color = Color.white;
+            PosicionarCentro(txtTurno.gameObject, 0, 0, 380, 40);
 
             // === CONSTRUCOES ===
             var tituloConst = CriarTexto(_gamePanel.transform, "CONSTRUIR", 24);
@@ -185,13 +179,13 @@ namespace CitySim.UI
             float bw = 200, bh = 75;
             float espacoX = 220, espacoY = 90;
             
-            CriarBotaoConstrucao(_gamePanel.transform, "CASA\n$800 | +50 pop", btnBlue, -espacoX, 30, bw, bh, () => Construir("casa"));
-            CriarBotaoConstrucao(_gamePanel.transform, "COMERCIO\n$1200 | +renda", btnGreen, 0, 30, bw, bh, () => Construir("comercio"));
-            CriarBotaoConstrucao(_gamePanel.transform, "INDUSTRIA\n$2000 | ++renda", new Color(0.5f, 0.5f, 0.6f), espacoX, 30, bw, bh, () => Construir("industria"));
+            CriarBotaoConstrucao(_gamePanel.transform, "CASA DE IMPOSTOS\n$1000 | +$300/t", new Color(0.7f, 0.6f, 0.2f), -espacoX, 30, bw, bh, () => Construir("casa_impostos"));
+            CriarBotaoConstrucao(_gamePanel.transform, "COMERCIO\n$1500 | +$250/t", btnGreen, 0, 30, bw, bh, () => Construir("comercio"));
+            CriarBotaoConstrucao(_gamePanel.transform, "INDUSTRIA\n$2500 | +$350/t", new Color(0.5f, 0.5f, 0.6f), espacoX, 30, bw, bh, () => Construir("industria"));
             
-            CriarBotaoConstrucao(_gamePanel.transform, "PARQUE\n$600 | +bem-estar", new Color(0.3f, 0.7f, 0.4f), -espacoX, 30 - espacoY, bw, bh, () => Construir("parque"));
-            CriarBotaoConstrucao(_gamePanel.transform, "ESCOLA\n$1500 | +satisfacao", btnOrange, 0, 30 - espacoY, bw, bh, () => Construir("escola"));
-            CriarBotaoConstrucao(_gamePanel.transform, "HOSPITAL\n$2500 | +bem-estar", btnPurple, espacoX, 30 - espacoY, bw, bh, () => Construir("hospital"));
+            CriarBotaoConstrucao(_gamePanel.transform, "PARQUE\n$800 | +bem-estar", new Color(0.3f, 0.7f, 0.4f), -espacoX, 30 - espacoY, bw, bh, () => Construir("parque"));
+            CriarBotaoConstrucao(_gamePanel.transform, "ESCOLA\n$2000 | +tudo", btnOrange, 0, 30 - espacoY, bw, bh, () => Construir("escola"));
+            CriarBotaoConstrucao(_gamePanel.transform, "HOSPITAL\n$3500 | ++bem-estar", btnPurple, espacoX, 30 - espacoY, bw, bh, () => Construir("hospital"));
 
             // === FEEDBACK ===
             txtFeedback = CriarTexto(_gamePanel.transform, "", 22);
@@ -292,11 +286,10 @@ namespace CitySim.UI
         void IniciarJogo()
         {
             // Reset
-            orcamento = 10000;
+            orcamento = 8000;
             satisfacao = 70;
             bemEstar = 60;
             votos = 55;
-            populacao = 100;
             turno = 1;
             rendaComercio = 0;
             custoManutencao = 0;
@@ -346,12 +339,12 @@ namespace CitySim.UI
         {
             switch (tipo)
             {
-                case "casa": return 800;
-                case "comercio": return 1200;
-                case "industria": return 2000;
-                case "parque": return 600;
-                case "escola": return 1500;
-                case "hospital": return 2500;
+                case "casa_impostos": return 1000;
+                case "comercio": return 1500;
+                case "industria": return 2500;
+                case "parque": return 800;
+                case "escola": return 2000;
+                case "hospital": return 3500;
                 default: return 0;
             }
         }
@@ -370,65 +363,70 @@ namespace CitySim.UI
 
             switch (tipo)
             {
-                case "casa":
-                    custo = 800;
+                case "casa_impostos":
+                    custo = 1000;
                     orcamento -= custo;
-                    populacao += 50;
-                    satisfacao += 3;
+                    rendaComercio += 300;
+                    satisfacao -= 5;
+                    bemEstar -= 3;
+                    votos -= 2;
                     casas++;
-                    custoManutencao += 20;
-                    msg = "+50 habitantes! Satisfacao +3%";
+                    custoManutencao += 50;
+                    msg = "+$300/turno! Mas Satisfacao -5%, Bem-Estar -3%, Votos -2%";
                     break;
 
                 case "comercio":
-                    custo = 1200;
+                    custo = 1500;
                     orcamento -= custo;
-                    rendaComercio += 200;
-                    satisfacao += 2;
+                    rendaComercio += 250;
+                    satisfacao += 3;
                     comercios++;
-                    msg = "+$200/turno! Satisfacao +2%";
+                    custoManutencao += 60;
+                    msg = "+$250/turno! Satisfacao +3%";
                     break;
 
                 case "industria":
-                    custo = 2000;
+                    custo = 2500;
                     orcamento -= custo;
-                    rendaComercio += 400;
-                    bemEstar -= 5;
-                    votos -= 2;
+                    rendaComercio += 350;
+                    bemEstar -= 8;
+                    votos -= 4;
                     industrias++;
-                    msg = "+$400/turno! Mas bem-estar -5%";
+                    custoManutencao += 100;
+                    msg = "+$350/turno! Mas Bem-Estar -8%, Votos -4%";
                     break;
 
                 case "parque":
-                    custo = 600;
+                    custo = 800;
                     orcamento -= custo;
-                    bemEstar += 8;
+                    bemEstar += 7;
                     votos += 3;
                     satisfacao += 2;
                     parques++;
-                    custoManutencao += 30;
-                    msg = "Bem-estar +8%! Votos +3%";
+                    custoManutencao += 40;
+                    msg = "Bem-Estar +7%! Votos +3%, Satisfacao +2%";
                     break;
 
                 case "escola":
-                    custo = 1500;
+                    custo = 2000;
                     orcamento -= custo;
-                    satisfacao += 6;
-                    votos += 4;
+                    satisfacao += 5;
+                    votos += 5;
+                    bemEstar += 3;
                     escolas++;
-                    custoManutencao += 80;
-                    msg = "Satisfacao +6%! Votos +4%";
+                    custoManutencao += 120;
+                    msg = "Satisfacao +5%! Votos +5%, Bem-Estar +3%";
                     break;
 
                 case "hospital":
-                    custo = 2500;
+                    custo = 3500;
                     orcamento -= custo;
-                    bemEstar += 10;
-                    votos += 5;
-                    satisfacao += 3;
+                    bemEstar += 12;
+                    votos += 6;
+                    satisfacao += 2;
                     hospitais++;
-                    custoManutencao += 150;
-                    msg = "Bem-estar +10%! Votos +5%";
+                    custoManutencao += 200;
+                    msg = "Bem-Estar +12%! Votos +6%, Satisfacao +2%";
                     break;
             }
 
@@ -461,13 +459,9 @@ namespace CitySim.UI
             orcamento += saldo;
 
             // Decaimento natural
-            satisfacao -= 2;
-            bemEstar -= 1;
-            votos -= 1;
-
-            // Bonus por populacao
-            if (populacao > 500) votos += 1;
-            if (populacao > 1000) { renda += 100; orcamento += 100; }
+            satisfacao -= 3;
+            bemEstar -= 2;
+            votos -= 2;
 
             // Penalidades
             if (bemEstar < 40) satisfacao -= 3;
@@ -533,14 +527,7 @@ namespace CitySim.UI
             ClampValores();
         }
 
-        /// <summary>
-        /// Modifica a população.
-        /// </summary>
-        public void ModifyPopulacao(int amount)
-        {
-            populacao += amount;
-            if (populacao < 0) populacao = 0;
-        }
+
 
         /// <summary>
         /// Modifica a renda por turno.
@@ -596,7 +583,6 @@ namespace CitySim.UI
                 txtVotos.text = votos + "%";
                 txtVotos.color = votos >= 51 ? btnPurple : btnRed;
             }
-            if (txtPopulacao != null) txtPopulacao.text = populacao + " habitantes";
             if (txtTurno != null) txtTurno.text = "Turno " + turno;
 
             // Barras
@@ -621,19 +607,9 @@ namespace CitySim.UI
             string motivo = "";
             bool perdeu = false;
 
-            if (orcamento <= 0)
+            if (satisfacao <= 10 && bemEstar <= 10)
             {
-                motivo = "Sua cidade faliu! Orcamento zerado.";
-                perdeu = true;
-            }
-            else if (satisfacao <= 20)
-            {
-                motivo = "Populacao revoltada! Satisfacao muito baixa.";
-                perdeu = true;
-            }
-            else if (votos < 51)
-            {
-                motivo = "Voce perdeu as eleicoes! Menos de 51% dos votos.";
+                motivo = "IMPEACHMENT! Satisfacao e Bem-Estar criticos. Voce foi destituido do cargo!";
                 perdeu = true;
             }
 
@@ -642,9 +618,9 @@ namespace CitySim.UI
                 GameManager.Instance.SetGameState(GameState.GameOverLose);
                 MostrarFim(false, motivo);
             }
-            else if (turno >= 20 && votos >= 51)
+            else if (turno >= 18 && votos >= 51)
             {
-                // Vitoria apos 20 turnos com maioria
+                // Vitoria apos 18 turnos com maioria simples
                 GameManager.Instance.SetGameState(GameState.GameOverWin);
                 MostrarFim(true, "Voce foi reeleito com " + votos + "% dos votos!");
             }
@@ -719,10 +695,10 @@ namespace CitySim.UI
             }
             if (stats != null)
             {
-                stats.text = "Turnos: " + turno + " | Populacao: " + populacao + "\n" +
+                stats.text = "Turnos Jogados: " + turno + "\n" +
                     "Orcamento Final: $" + orcamento + "\n" +
                     "Satisfacao: " + satisfacao + "% | Bem-Estar: " + bemEstar + "% | Votos: " + votos + "%\n" +
-                    "Construcoes: " + casas + " casas, " + comercios + " comercios, " + industrias + " industrias,\n" +
+                    "Construcoes: " + casas + " casas impostos, " + comercios + " comercios, " + industrias + " industrias,\n" +
                     parques + " parques, " + escolas + " escolas, " + hospitais + " hospitais";
                 stats.color = new Color(0.75f, 0.75f, 0.75f);
             }

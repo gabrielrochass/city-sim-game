@@ -186,7 +186,7 @@ namespace CitySim.Managers
             uiSetup.ModifySatisfacao(card.satisfactionEffect);
             uiSetup.ModifyBemEstar(card.wellbeingEffect);
             uiSetup.ModifyVotos(card.votesEffect);
-            uiSetup.ModifyPopulacao(card.populationEffect);
+            // populationEffect removido (sistema de população foi removido)
 
             // Aplica efeitos na economia por turno
             uiSetup.ModifyRendaComercio(card.incomePerTurnEffect);

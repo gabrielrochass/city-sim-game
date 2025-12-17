@@ -15,12 +15,12 @@ MonoBehaviour:
   cardName: "F\xE1brica T\xEAxtil"
   description: "Ind\xFAstria traz empregos e renda, mas polui e afeta sa\xFAde p\xFAblica."
   type: 5
-  budgetCost: 3000
-  satisfactionEffect: 5
-  wellbeingEffect: -10
-  votesEffect: 8
-  populationEffect: 100
-  incomePerTurnEffect: 500
-  maintenanceCostEffect: 100
+  budgetCost: 4500
+  satisfactionEffect: 4
+  wellbeingEffect: -12
+  votesEffect: 6
+  populationEffect: 0
+  incomePerTurnEffect: 450
+  maintenanceCostEffect: 120
   cardColor: {r: 0.9, g: 0.6, b: 0.1, a: 1}
   cardIcon: {fileID: 0}

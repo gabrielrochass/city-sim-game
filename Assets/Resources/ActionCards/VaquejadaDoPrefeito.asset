@@ -16,10 +16,10 @@ MonoBehaviour:
   description: "O povo quer \xE9 festa! Patrocinar a vaquejada garante sua imagem
     de 'prefeito do povo'."
   type: 3
-  budgetCost: 3000
-  satisfactionEffect: 10
-  wellbeingEffect: -3
-  votesEffect: 15
+  budgetCost: 4500
+  satisfactionEffect: 8
+  wellbeingEffect: -2
+  votesEffect: 12
   populationEffect: 0
   incomePerTurnEffect: 0
   maintenanceCostEffect: 0

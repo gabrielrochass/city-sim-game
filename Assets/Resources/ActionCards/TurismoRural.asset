@@ -16,12 +16,12 @@ MonoBehaviour:
   description: "Investir em turismo ecol\xF3gico traz renda e melhora a imagem da
     cidade."
   type: 3
-  budgetCost: 2000
-  satisfactionEffect: 10
-  wellbeingEffect: 5
-  votesEffect: 8
-  populationEffect: 20
-  incomePerTurnEffect: 250
-  maintenanceCostEffect: 40
+  budgetCost: 3500
+  satisfactionEffect: 8
+  wellbeingEffect: 4
+  votesEffect: 6
+  populationEffect: 0
+  incomePerTurnEffect: 200
+  maintenanceCostEffect: 50
   cardColor: {r: 0.2, g: 0.7, b: 0.3, a: 1}
   cardIcon: {fileID: 0}

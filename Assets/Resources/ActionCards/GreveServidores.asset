@@ -17,9 +17,9 @@ MonoBehaviour:
     na cidade."
   type: 4
   budgetCost: 0
-  satisfactionEffect: -18
-  wellbeingEffect: -10
-  votesEffect: -15
+  satisfactionEffect: -20
+  wellbeingEffect: -12
+  votesEffect: -18
   populationEffect: 0
   incomePerTurnEffect: 0
   maintenanceCostEffect: 0

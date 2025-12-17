@@ -15,12 +15,12 @@ MonoBehaviour:
   cardName: "Corte de Funcion\xE1rios"
   description: "Demitir servidores reduz custos, mas piora servi\xE7os e gera revolta."
   type: 5
-  budgetCost: 0
-  satisfactionEffect: -12
-  wellbeingEffect: -8
-  votesEffect: -10
+  budgetCost: 500
+  satisfactionEffect: -15
+  wellbeingEffect: -10
+  votesEffect: -12
   populationEffect: 0
   incomePerTurnEffect: 0
-  maintenanceCostEffect: -200
+  maintenanceCostEffect: -250
   cardColor: {r: 0.9, g: 0.6, b: 0.1, a: 1}
   cardIcon: {fileID: 0}

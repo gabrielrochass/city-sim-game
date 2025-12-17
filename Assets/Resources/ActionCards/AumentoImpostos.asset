@@ -16,12 +16,12 @@ MonoBehaviour:
   description: "Aumentar impostos municipais. O povo n\xE3o vai gostar, mas o caixa
     agradece."
   type: 5
-  budgetCost: 0
-  satisfactionEffect: -10
+  budgetCost: 500
+  satisfactionEffect: -8
   wellbeingEffect: -8
-  votesEffect: -12
+  votesEffect: -8
   populationEffect: 0
-  incomePerTurnEffect: 400
+  incomePerTurnEffect: 450
   maintenanceCostEffect: 0
   cardColor: {r: 0.9, g: 0.6, b: 0.1, a: 1}
   cardIcon: {fileID: 0}
