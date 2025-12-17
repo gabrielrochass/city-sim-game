@@ -15,7 +15,7 @@ MonoBehaviour:
   cardName: "Carnaval Fora de \xC9poca"
   description: "Festan\xE7a gera popularidade imediata, mas deixa a cidade quebrada."
   type: 5
-  budgetCost: 4000
+  budgetCost: 3000
   satisfactionEffect: 12
   wellbeingEffect: 4
   votesEffect: 10

@@ -59,19 +59,17 @@ Um jogo de gerenciamento de cidade desenvolvido em **Unity**, seguindo rigorosam
 
 ## 🎯 Objetivos do Jogo
 
-Para **vencer**, você precisa atingir simultaneamente:
+Para **vencer**, você precisa:
 
-- ✓ **5.000+ habitantes**
-- ✓ **Felicidade ≥ 70%**
-- ✓ **Criminalidade ≤ 20%**
+- ✓ **Completar 18 turnos**
+- ✓ **Obter 51% ou mais de VOTOS no turno 18** (Reeleição!)
 
 ### Condições de Derrota
 
 O jogo termina com derrota se:
 
-- ✗ Orçamento < -1.000 (falência)
-- ✗ População = 0 (cidade vazia)
-- ✗ Felicidade ≤ 10% (revolta civil)
+- ✗ **IMPEACHMENT:** Qualquer indicador (Satisfação, Bem-Estar ou Votos) < 15%
+- ✗ **NÃO REELEITO:** Menos de 51% de votos no turno 18
 
 ---
 
@@ -147,35 +145,41 @@ Assets/Scenes/MainScene.unity
 
 | Ação | Controle |
 |------|----------|
-| **Processar Turno** | `SPACE` |
-| **Abrir Menu Construção** | `Mouse Clique Esquerdo` |
-| **Pausar/Retomar** | `ESC` ou Botão Pausa |
-| **Menu Principal** | Qualquer tela de game over |
+| **Avançar Turno** | Botão "PRÓXIMO TURNO" |
+| **Construir** | Clique no botão da construção, depois `SPACE` na grade |
+| **Cancelar Construção** | `C` ou `ESC` |
+| **Visualizar Cidade** | Botão "VISUALIZAR CIDADE" |
+| **Voltar da Visualização** | `V` |
+| **Pausar/Retomar** | `ESC` ou Botão Menu |
+| **Escolher Carta** | Clique na carta (a cada 3 turnos) |
 
 ### Fluxo do Jogo
 
-1. **Menu Principal** → Selecione "Jogar" ou "Instruções"
+1. **Menu Principal** → Selecione "Jogar" ou "Como Jogar"
 2. **Tela de Instruções** → Leia as mecânicas (opcional)
-3. **Jogo Principal** → Construa edifícios e gerencie a cidade
-4. **Processamento de Turno** → Pressione `SPACE` para avançar
-5. **Vitória/Derrota** → Veja o resultado final com estatísticas
+3. **Jogo Principal** → Construa edifícios e escolha cartas estratégicas
+4. **Cartas de Ação** → A cada 3 turnos (3, 6, 9, 12, 15, 18), escolha 1 carta
+5. **Avançar Turno** → Clique em "PRÓXIMO TURNO" para processar
+6. **Vitória/Derrota** → No turno 18, veja se foi reeleito!
 
 ### Estratégia Recomendada
 
-**Fase Inicial (Turnos 1-10):**
-- Construa 5-10 residências para população inicial
-- Construa 2-3 lojas comerciais para renda
-- Mantenha orçamento positivo
+**Fase Inicial (Turnos 1-6):**
+- Construa Casas de Impostos para gerar renda (+$430/turno)
+- Equilibre com Comércios e Parques para manter indicadores
+- ATENÇÃO: Indicadores caem 1% por turno naturalmente!
 
-**Fase Media (Turnos 11-30):**
-- Expanda residências (mire em 2.000+ população)
-- Construa escolas e parques para felicidade
-- Monitore taxas de imposto (evite excessos)
+**Fase Média (Turnos 7-12):**
+- Escolha cartas estratégicas (turnos 3, 6, 9, 12)
+- Construa Escolas para ganhar Satisfação (+7%) e Votos (+6%)
+- Evite que indicadores caiam abaixo de 15% (IMPEACHMENT!)
 
-**Fase Final (Turnos 31+):**
-- Alcance 5.000 população
-- Construa delegacias para reduzir crime
-- Mantenha felicidade acima de 70%
+**Fase Final (Turnos 13-18):**
+- **FOCO EM VOTOS!** Precisa de 51%+ no turno 18
+- Hospitais dão +9% votos (melhor opção, mas caro: $3500)
+- Escolas dão +6% votos (bom custo-benefício: $2000)
+- Parques dão +4% votos (mais barato: $800)
+- Use cartas positivas para ganhar votos extras
 
 ---
 

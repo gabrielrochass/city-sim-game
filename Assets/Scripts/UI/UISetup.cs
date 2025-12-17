@@ -28,6 +28,7 @@ namespace CitySim.UI
         [SerializeField] private Sprite howToPlayButtonSprite;
         [SerializeField] private Sprite exitButtonSprite;
         [SerializeField] private Sprite genericButtonSprite; // Botões genéricos (voltar, menu, próximo turno, etc)
+        [SerializeField] private Sprite visualizarCidadeButtonSprite; // Botão de visualizar cidade
         
         // Cores
         private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
@@ -44,6 +45,8 @@ namespace CitySim.UI
         private GameObject _gamePanel;
         private GameObject _pausePanel;
         private GameObject _endPanel;
+        private bool _visualizandoCidade = false;
+        private GameObject _tooltip;
 
         // === INDICADORES ===
         private int orcamento = 8000;       // Dinheiro
@@ -146,7 +149,7 @@ namespace CitySim.UI
 
             var titulo = CriarTexto(_instructionsPanel.transform, "COMO JOGAR", 48);
             titulo.color = Color.white;
-            PosicionarCentro(titulo.gameObject, 0, 280, 500, 60);
+            PosicionarCentro(titulo.gameObject, 0, 310, 500, 60);
 
             // Card semi-transparente para as instruções
             var card = new GameObject("InstructionsCard");
@@ -155,7 +158,7 @@ namespace CitySim.UI
             cardRect.anchorMin = new Vector2(0.5f, 0.5f);
             cardRect.anchorMax = new Vector2(0.5f, 0.5f);
             cardRect.anchoredPosition = new Vector2(0, -20);
-            cardRect.sizeDelta = new Vector2(750, 500);
+            cardRect.sizeDelta = new Vector2(850, 580);
             
             var cardImg = card.AddComponent<Image>();
             cardImg.color = new Color(0.1f, 0.1f, 0.15f, 0.85f); // Azul escuro semi-transparente
@@ -166,19 +169,23 @@ namespace CitySim.UI
             outline.effectDistance = new Vector2(2, -2);
 
             string txt = "<b><color=#4A90D9>OBJETIVO</color></b>\n" +
-                "Governe bem por 18 turnos e conquiste 51% dos votos!\n\n" +
+                "Governe por 18 turnos e conquiste 51% dos votos para ser REELEITO!\n\n" +
                 "<b><color=#4A90D9>INDICADORES</color></b>\n" +
                 "<color=#50C878>[$] Orcamento</color> - Seu dinheiro para investir.\n" +
                 "<color=#F5A623>[S] Satisfacao</color> - Felicidade do povo.\n" +
                 "<color=#50C878>[B] Bem-Estar</color> - Saude e qualidade de vida.\n" +
-                "<color=#9B59B6>[V] Votos</color> - Sua aprovacao. Precisa de 51% para vencer!\n\n" +
-                "<b><color=#4A90D9>CONSTRUCOES</color></b>\n" +
-                "Casa de Impostos: ++renda, --satisfacao/bem-estar\n" +
-                "Comercio: +renda, +satisfacao\n" +
-                "Industria: ++renda, --bem-estar (alto custo)\n" +
-                "Parque: +bem-estar, +votos\n" +
-                "Escola: +satisfacao, +votos, +bem-estar\n" +
-                "Hospital: ++bem-estar, +votos (muito caro!)\n\n" +
+                "<color=#9B59B6>[V] Votos</color> - Sua aprovacao. 51%+ no turno 18 = VITORIA!\n\n" +
+                "<b><color=#4A90D9>CONSTRUCOES</color></b> (Clique na cidade para construir)\n" +
+                "Casa de Impostos ($1000): +$430/turno, penalidades leves\n" +
+                "Comercio ($1500): +$250/turno, +satisfacao, +votos\n" +
+                "Industria ($2500): +$350/turno, +satisfacao, penalidades\n" +
+                "Parque ($800): +votos, +satisfacao, +bem-estar\n" +
+                "Escola ($2000): ++satisfacao, ++votos\n" +
+                "Hospital ($3500): +++votos, ++satisfacao\n\n" +
+                "<b><color=#4A90D9>CARTAS</color></b>\n" +
+                "A cada 3 turnos: escolha 1 carta com efeitos especiais\n\n" +
+                "<b><color=#F5A623>TECLAS</color></b>\n" +
+                "ESPACO: Construir | C: Cancelar | V: Ver cidade\n\n" +
                 "<b><color=#E74C3C>IMPEACHMENT</color></b>\n" +
                 "Se QUALQUER indicador < 15%: Voce sera destituido!";
 
@@ -191,7 +198,7 @@ namespace CitySim.UI
             instRect.offsetMin = new Vector2(30, 30); // Padding interno
             instRect.offsetMax = new Vector2(-30, -30);
 
-            CriarBotao(_instructionsPanel.transform, "VOLTAR", Color.white, 0, -300, 250, 70, MostrarMenu, genericButtonSprite, true, false, true);
+            CriarBotao(_instructionsPanel.transform, "VOLTAR", Color.white, 0, -330, 250, 70, MostrarMenu, genericButtonSprite, true, false, true);
         }
 
         void MostrarInstrucoes()
@@ -239,13 +246,13 @@ namespace CitySim.UI
             float bw = 270, bh = 110;
             float espacoX = 290, espacoY = 115;
             
-            CriarBotaoConstrucao(_gamePanel.transform, "CASA DE IMPOSTOS\n$1000 | +$300/t", new Color(0.7f, 0.6f, 0.2f), -espacoX, 30, bw, bh, () => Construir("casa_impostos"));
-            CriarBotaoConstrucao(_gamePanel.transform, "COMERCIO\n$1500 | +$250/t", btnGreen, 0, 30, bw, bh, () => Construir("comercio"));
-            CriarBotaoConstrucao(_gamePanel.transform, "INDUSTRIA\n$2500 | +$350/t", new Color(0.5f, 0.5f, 0.6f), espacoX, 30, bw, bh, () => Construir("industria"));
+            CriarBotaoConstrucao(_gamePanel.transform, "CASA DE IMPOSTOS", -espacoX, 30, bw, bh, () => Construir("casa_impostos"), "Custo: $1000 | Manutenção: +$50/turno\nRenda: +$430/turno\nSatisfação: -3% | Bem-estar: -2% | Votos: -1%");
+            CriarBotaoConstrucao(_gamePanel.transform, "COMÉRCIO", 0, 30, bw, bh, () => Construir("comercio"), "Custo: $1500 | Manutenção: +$60/turno\nRenda: +$250/turno\nSatisfação: +5% | Votos: +2%");
+            CriarBotaoConstrucao(_gamePanel.transform, "INDÚSTRIA", espacoX, 30, bw, bh, () => Construir("industria"), "Custo: $2500 | Manutenção: +$100/turno\nRenda: +$350/turno | Satisfação: +4%\nBem-estar: -4% | Votos: -2%");
             
-            CriarBotaoConstrucao(_gamePanel.transform, "PARQUE\n$800 | +bem-estar", new Color(0.3f, 0.7f, 0.4f), -espacoX, 30 - espacoY, bw, bh, () => Construir("parque"));
-            CriarBotaoConstrucao(_gamePanel.transform, "ESCOLA\n$2000 | +tudo", btnOrange, 0, 30 - espacoY, bw, bh, () => Construir("escola"));
-            CriarBotaoConstrucao(_gamePanel.transform, "HOSPITAL\n$3500 | ++bem-estar", btnPurple, espacoX, 30 - espacoY, bw, bh, () => Construir("hospital"));
+            CriarBotaoConstrucao(_gamePanel.transform, "PARQUE", -espacoX, 30 - espacoY, bw, bh, () => Construir("parque"), "Custo: $800 | Manutenção: +$40/turno\nVotos: +4% | Satisfação: +3% | Bem-estar: +3%");
+            CriarBotaoConstrucao(_gamePanel.transform, "ESCOLA", 0, 30 - espacoY, bw, bh, () => Construir("escola"), "Custo: $2000 | Manutenção: +$120/turno\nSatisfação: +7% | Votos: +6% | Bem-estar: +2%");
+            CriarBotaoConstrucao(_gamePanel.transform, "HOSPITAL", espacoX, 30 - espacoY, bw, bh, () => Construir("hospital"), "Custo: $3500 | Manutenção: +$200/turno\nVotos: +9% | Satisfação: +8% | Bem-estar: +5%");
 
             // === FEEDBACK ===
             txtFeedback = CriarTexto(_gamePanel.transform, "", 22);
@@ -258,8 +265,9 @@ namespace CitySim.UI
             PosicionarCentro(txtResumo.gameObject, 0, -195, 600, 30);
 
             // === BARRA INFERIOR ===
-            CriarBotao(_gamePanel.transform, "PROXIMO TURNO", Color.white, 120, -260, 280, 75, ProximoTurno, genericButtonSprite, true, false, true);
-            CriarBotao(_gamePanel.transform, "MENU", Color.white, -180, -260, 140, 75, Pausar, genericButtonSprite, true, false, true);
+            var btnVisualizarCidade = CriarBotaoComTooltip(_gamePanel.transform, "VISUALIZAR CIDADE", Color.white, 0, -260, 140, 60, VisualizarCidade, visualizarCidadeButtonSprite, "Visualizar a cidade e suas construções (V para voltar)");
+            CriarBotao(_gamePanel.transform, "PROXIMO TURNO", Color.white, 240, -260, 200, 125, ProximoTurno, genericButtonSprite, true, false, true);
+            CriarBotao(_gamePanel.transform, "MENU", Color.white, -230, -260, 150, 95, Pausar, genericButtonSprite, true, false, true);
 
             AtualizarHUD();
         }
@@ -304,7 +312,7 @@ namespace CitySim.UI
             fillRef.offsetMax = Vector2.zero;
         }
 
-        void CriarBotaoConstrucao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao)
+        void CriarBotaoConstrucao(Transform parent, string texto, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao, string tooltipText)
         {
             var go = new GameObject("Btn");
             go.transform.SetParent(parent, false);
@@ -323,7 +331,7 @@ namespace CitySim.UI
             }
             else
             {
-                img.color = new Color(cor.r * 0.7f, cor.g * 0.7f, cor.b * 0.7f, 0.95f);
+                img.color = new Color(0.7f, 0.7f, 0.7f, 0.95f);
             }
 
             var btn = go.AddComponent<Button>();
@@ -344,13 +352,71 @@ namespace CitySim.UI
             txtRect.anchorMax = Vector2.one;
             txtRect.offsetMin = new Vector2(8, 5);
             txtRect.offsetMax = new Vector2(-8, -5);
+
+            // Criar tooltip para construção
+            var tooltip = new GameObject("TooltipConstrucao");
+            tooltip.transform.SetParent(_canvas.transform, false);
+            var tooltipRect = tooltip.AddComponent<RectTransform>();
+            tooltipRect.sizeDelta = new Vector2(320, 120);
+            
+            var tooltipBg = tooltip.AddComponent<Image>();
+            tooltipBg.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+            
+            var tooltipTextComp = CriarTexto(tooltip.transform, tooltipText, 18);
+            tooltipTextComp.alignment = TextAlignmentOptions.Center;
+            var tooltipTextRect = tooltipTextComp.GetComponent<RectTransform>();
+            tooltipTextRect.anchorMin = Vector2.zero;
+            tooltipTextRect.anchorMax = Vector2.one;
+            tooltipTextRect.offsetMin = new Vector2(10, 5);
+            tooltipTextRect.offsetMax = new Vector2(-10, -5);
+            
+            tooltip.SetActive(false);
+
+            // Adicionar eventos de hover
+            var trigger = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+            
+            var entryEnter = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryEnter.eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+            entryEnter.callback.AddListener((data) => { 
+                tooltip.SetActive(true);
+                var tooltipRect = tooltip.GetComponent<RectTransform>();
+                tooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
+                tooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
+                tooltipRect.anchoredPosition = new Vector2(x, y + h/2 + 60);
+            });
+            trigger.triggers.Add(entryEnter);
+            
+            var entryExit = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
+            entryExit.callback.AddListener((data) => { tooltip.SetActive(false); });
+            trigger.triggers.Add(entryExit);
+            
+            var entryClick = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryClick.eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick;
+            entryClick.callback.AddListener((data) => { tooltip.SetActive(false); });
+            trigger.triggers.Add(entryClick);
         }
 
         void MostrarJogo()
         {
             EsconderTudo();
             _gamePanel.SetActive(true);
+            _visualizandoCidade = false;
             AtualizarHUD();
+        }
+
+        void VisualizarCidade()
+        {
+            _gamePanel.SetActive(false);
+            _visualizandoCidade = true;
+            Debug.Log("[UISetup] Visualizando cidade. Pressione V para voltar.");
+        }
+
+        void VoltarParaConstrucoes()
+        {
+            _gamePanel.SetActive(true);
+            _visualizandoCidade = false;
+            Debug.Log("[UISetup] Voltou para tela de construções.");
         }
 
         void IniciarJogo()
@@ -453,67 +519,69 @@ namespace CitySim.UI
                 case "casa_impostos":
                     custo = 1000;
                     orcamento -= custo;
-                    rendaComercio += 300;
-                    satisfacao -= 5;
-                    bemEstar -= 3;
-                    votos -= 2;
+                    rendaComercio += 430;
+                    satisfacao -= 3;
+                    bemEstar -= 2;
+                    votos -= 1;
                     casas++;
                     custoManutencao += 50;
-                    msg = "+$300/turno! Mas Satisfacao -5%, Bem-Estar -3%, Votos -2%";
+                    msg = "+$430/turno! Mas Satisfacao -3%, Bem-Estar -2%, Votos -1%";
                     break;
 
                 case "comercio":
                     custo = 1500;
                     orcamento -= custo;
                     rendaComercio += 250;
-                    satisfacao += 3;
+                    satisfacao += 5;
+                    votos += 2;
                     comercios++;
                     custoManutencao += 60;
-                    msg = "+$250/turno! Satisfacao +3%";
+                    msg = "+$250/turno! Satisfacao +5%, Votos +2%";
                     break;
 
                 case "industria":
                     custo = 2500;
                     orcamento -= custo;
                     rendaComercio += 350;
-                    bemEstar -= 8;
-                    votos -= 4;
+                    satisfacao += 4;
+                    bemEstar -= 4;
+                    votos -= 2;
                     industrias++;
                     custoManutencao += 100;
-                    msg = "+$350/turno! Mas Bem-Estar -8%, Votos -4%";
+                    msg = "+$350/turno! Satisfacao +4%, Mas Bem-Estar -4%, Votos -2%";
                     break;
 
                 case "parque":
                     custo = 800;
                     orcamento -= custo;
-                    bemEstar += 7;
-                    votos += 3;
-                    satisfacao += 2;
+                    bemEstar += 3;
+                    votos += 4;
+                    satisfacao += 3;
                     parques++;
                     custoManutencao += 40;
-                    msg = "Bem-Estar +7%! Votos +3%, Satisfacao +2%";
+                    msg = "Votos +4%! Satisfacao +3%, Bem-Estar +3%";
                     break;
 
                 case "escola":
                     custo = 2000;
                     orcamento -= custo;
-                    satisfacao += 5;
-                    votos += 5;
-                    bemEstar += 3;
+                    satisfacao += 7;
+                    votos += 6;
+                    bemEstar += 2;
                     escolas++;
                     custoManutencao += 120;
-                    msg = "Satisfacao +5%! Votos +5%, Bem-Estar +3%";
+                    msg = "Satisfacao +7%! Votos +6%, Bem-Estar +2%";
                     break;
 
                 case "hospital":
                     custo = 3500;
                     orcamento -= custo;
-                    bemEstar += 12;
-                    votos += 6;
-                    satisfacao += 2;
+                    bemEstar += 5;
+                    votos += 9;
+                    satisfacao += 8;
                     hospitais++;
                     custoManutencao += 200;
-                    msg = "Bem-Estar +12%! Votos +6%, Satisfacao +2%";
+                    msg = "Votos +9%! Satisfacao +8%, Bem-Estar +5%";
                     break;
             }
 
@@ -546,9 +614,9 @@ namespace CitySim.UI
             orcamento += saldo;
 
             // Decaimento natural
-            satisfacao -= 3;
-            bemEstar -= 2;
-            votos -= 2;
+            satisfacao -= 1;
+            bemEstar -= 1;
+            votos -= 1;
 
             // Penalidades
             if (bemEstar < 40) satisfacao -= 3;
@@ -561,7 +629,27 @@ namespace CitySim.UI
             txtFeedback.color = Color.white;
 
             AtualizarHUD();
-            VerificarGameOver();
+            
+            // Verificação de fim de jogo
+            if (turno >= 18)
+            {
+                // No turno 18, decide vitoria/derrota baseado nos votos
+                if (votos >= 51)
+                {
+                    GameManager.Instance.SetGameState(GameState.GameOverWin);
+                    MostrarFim(true, "REELEITO! Você conquistou " + votos + "% dos votos!");
+                }
+                else
+                {
+                    GameManager.Instance.SetGameState(GameState.GameOverLose);
+                    MostrarFim(false, "NÃO REELEITO! Você obteve apenas " + votos + "% dos votos. É necessário 51% para vencer.");
+                }
+            }
+            else
+            {
+                // Antes do turno 18, apenas verifica impeachment
+                VerificarGameOver();
+            }
         }
 
         void ClampValores()
@@ -641,7 +729,8 @@ namespace CitySim.UI
             if (txtFeedback != null)
             {
                 txtFeedback.text = message;
-                txtFeedback.color = color;
+                // Sempre usa branco para texto de feedback
+                txtFeedback.color = Color.white;
             }
         }
 
@@ -691,6 +780,7 @@ namespace CitySim.UI
         /// </summary>
         public void VerificarGameOver()
         {
+            // Verifica apenas impeachment (usado antes do turno 18)
             string motivo = "";
             bool perdeu = false;
 
@@ -708,12 +798,6 @@ namespace CitySim.UI
             {
                 GameManager.Instance.SetGameState(GameState.GameOverLose);
                 MostrarFim(false, motivo);
-            }
-            else if (turno >= 18 && votos >= 51)
-            {
-                // Vitoria apos 18 turnos com maioria simples
-                GameManager.Instance.SetGameState(GameState.GameOverWin);
-                MostrarFim(true, "Voce foi reeleito com " + votos + "% dos votos!");
             }
         }
 
@@ -950,6 +1034,85 @@ namespace CitySim.UI
             }
         }
 
+        GameObject CriarBotaoComTooltip(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao, Sprite sprite, string tooltipText)
+        {
+            var go = new GameObject("Btn_" + texto);
+            go.transform.SetParent(parent, false);
+
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, y);
+            rect.sizeDelta = new Vector2(w, h);
+
+            var img = go.AddComponent<Image>();
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.color = Color.white;
+            }
+            else
+            {
+                img.color = cor;
+            }
+
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(acao);
+
+            // Hover claro
+            var colors = btn.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+            btn.colors = colors;
+
+            // Criar tooltip
+            _tooltip = new GameObject("Tooltip");
+            _tooltip.transform.SetParent(_canvas.transform, false);
+            var tooltipRect = _tooltip.AddComponent<RectTransform>();
+            tooltipRect.sizeDelta = new Vector2(300, 60);
+            
+            var tooltipBg = _tooltip.AddComponent<Image>();
+            tooltipBg.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+            
+            var tooltipText_tmp = CriarTexto(_tooltip.transform, tooltipText, 18);
+            tooltipText_tmp.alignment = TextAlignmentOptions.Center;
+            var tooltipTextRect = tooltipText_tmp.GetComponent<RectTransform>();
+            tooltipTextRect.anchorMin = Vector2.zero;
+            tooltipTextRect.anchorMax = Vector2.one;
+            tooltipTextRect.offsetMin = new Vector2(10, 5);
+            tooltipTextRect.offsetMax = new Vector2(-10, -5);
+            
+            _tooltip.SetActive(false);
+
+            // Adicionar eventos de hover para mostrar/esconder tooltip
+            var trigger = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+            
+            var entryEnter = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryEnter.eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+            entryEnter.callback.AddListener((data) => { 
+                _tooltip.SetActive(true);
+                var tooltipRect = _tooltip.GetComponent<RectTransform>();
+                tooltipRect.anchorMin = new Vector2(0.5f, 0.5f);
+                tooltipRect.anchorMax = new Vector2(0.5f, 0.5f);
+                tooltipRect.anchoredPosition = new Vector2(x, y + h/2 + 40); // Acima do bot\u00e3o
+            });
+            trigger.triggers.Add(entryEnter);
+            
+            var entryExit = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
+            entryExit.callback.AddListener((data) => { _tooltip.SetActive(false); });
+            trigger.triggers.Add(entryExit);
+            
+            var entryClick = new UnityEngine.EventSystems.EventTrigger.Entry();
+            entryClick.eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick;
+            entryClick.callback.AddListener((data) => { _tooltip.SetActive(false); });
+            trigger.triggers.Add(entryClick);
+
+            return go;
+        }
+
         void PosicionarCentro(GameObject go, float x, float y, float w, float h)
         {
             var rect = go.GetComponent<RectTransform>();
@@ -971,6 +1134,12 @@ namespace CitySim.UI
 
         void Update()
         {
+            // Detecta tecla V para voltar da visualização da cidade
+            if (_visualizandoCidade && Input.GetKeyDown(KeyCode.V))
+            {
+                VoltarParaConstrucoes();
+            }
+
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 if (GameManager.Instance.CurrentState == GameState.Playing)

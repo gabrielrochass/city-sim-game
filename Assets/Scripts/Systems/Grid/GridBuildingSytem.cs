@@ -181,7 +181,7 @@ namespace CitySim.Systems.Grid
                 }
             }
 
-            else if (Input.GetKeyDown(KeyCode.Escape))
+            else if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.C))
             {
                 ClearArea();
                 Destroy(temp.gameObject);
