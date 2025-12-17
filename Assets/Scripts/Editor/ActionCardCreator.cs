@@ -122,13 +122,13 @@ namespace CitySim.Editor
             CreateCard(folderPath, "CarnavalForaEpoca",
                 "Carnaval Fora de Época",
                 "Festança gera popularidade imediata, mas deixa a cidade quebrada.",
-                4000, 12, 4, 10, 0, -300, 0,
+                3000, 12, 4, 10, 0, -300, 0,
                 new Color(0.9f, 0.6f, 0.1f), CardType.Neutral);
 
             CreateCard(folderPath, "FabricaTextil",
                 "Fábrica Têxtil",
                 "Indústria traz empregos e renda, mas polui e afeta saúde pública.",
-                4500, 4, -12, 6, 0, 450, 120,
+                3500, 4, -12, 6, 0, 450, 120,
                 new Color(0.9f, 0.6f, 0.1f), CardType.Neutral);
 
             CreateCard(folderPath, "CorteFuncionarios",
