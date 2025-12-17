@@ -447,6 +447,12 @@ namespace CitySim.UI
         {
             turno++;
 
+            // Sorteia cartas de ação a cada 3 turnos (turnos 3, 6, 9, 12, etc)
+            if (turno % 3 == 0 && Managers.ActionCardManager.Instance != null)
+            {
+                Managers.ActionCardManager.Instance.DrawCards();
+            }
+
             // Calcular renda e custos
             int renda = rendaBase + rendaComercio;
             int custos = custoManutencao;
@@ -484,7 +490,91 @@ namespace CitySim.UI
             votos = Mathf.Clamp(votos, 0, 100);
         }
 
-        void AtualizarHUD()
+        // ==================== METODOS PUBLICOS PARA CARTAS ====================
+        
+        /// <summary>
+        /// Retorna o orçamento atual.
+        /// </summary>
+        public int GetOrcamento() => orcamento;
+
+        /// <summary>
+        /// Modifica o orçamento.
+        /// </summary>
+        public void ModifyOrcamento(int amount)
+        {
+            orcamento += amount;
+            ClampValores();
+        }
+
+        /// <summary>
+        /// Modifica a satisfação.
+        /// </summary>
+        public void ModifySatisfacao(int amount)
+        {
+            satisfacao += amount;
+            ClampValores();
+        }
+
+        /// <summary>
+        /// Modifica o bem-estar.
+        /// </summary>
+        public void ModifyBemEstar(int amount)
+        {
+            bemEstar += amount;
+            ClampValores();
+        }
+
+        /// <summary>
+        /// Modifica os votos.
+        /// </summary>
+        public void ModifyVotos(int amount)
+        {
+            votos += amount;
+            ClampValores();
+        }
+
+        /// <summary>
+        /// Modifica a população.
+        /// </summary>
+        public void ModifyPopulacao(int amount)
+        {
+            populacao += amount;
+            if (populacao < 0) populacao = 0;
+        }
+
+        /// <summary>
+        /// Modifica a renda por turno.
+        /// </summary>
+        public void ModifyRendaComercio(int amount)
+        {
+            rendaComercio += amount;
+        }
+
+        /// <summary>
+        /// Modifica o custo de manutenção.
+        /// </summary>
+        public void ModifyCustoManutencao(int amount)
+        {
+            custoManutencao += amount;
+            if (custoManutencao < 0) custoManutencao = 0;
+        }
+
+        /// <summary>
+        /// Define o texto de feedback.
+        /// </summary>
+        public void SetFeedback(string message, Color color)
+        {
+            if (txtFeedback != null)
+            {
+                txtFeedback.text = message;
+                txtFeedback.color = color;
+            }
+        }
+
+        /// <summary>
+        /// Atualiza a HUD (método público).
+        /// </summary>
+        public void AtualizarHUD()
         {
             if (txtOrcamento != null)
             {
@@ -523,7 +613,10 @@ namespace CitySim.UI
             }
         }
 
-        void VerificarGameOver()
+        /// <summary>
+        /// Verifica condições de game over (método público).
+        /// </summary>
+        public void VerificarGameOver()
         {
             string motivo = "";
             bool perdeu = false;
