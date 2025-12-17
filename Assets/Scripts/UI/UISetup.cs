@@ -10,7 +10,15 @@ namespace CitySim.UI
     {
         [Header("Grid Building System")]
         [SerializeField] private GridBuildingSytem gridBuildingSystem;
-        [SerializeField] private GameObject housePrefab; // Prefab da casa que será usado para todas as construções
+        
+        [Header("Building Prefabs")]
+        [SerializeField] private GameObject housePrefab;
+        [SerializeField] private GameObject comercioPrefab;
+        [SerializeField] private GameObject industriaPrefab;
+        [SerializeField] private GameObject parquePrefab;
+        [SerializeField] private GameObject escolaPrefab;
+        [SerializeField] private GameObject hospitalPrefab;
+        
         // Cores
         private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
         private Color panelColor = new Color(0.08f, 0.1f, 0.14f, 0.98f);
@@ -313,7 +321,7 @@ namespace CitySim.UI
                 return;
             }
 
-            // Verificar se o GridBuildingSystem e o prefab estão configurados
+            // Verificar se o GridBuildingSystem está configurado
             if (gridBuildingSystem == null)
             {
                 txtFeedback.text = "ERRO: GridBuildingSystem nao configurado!";
@@ -321,9 +329,12 @@ namespace CitySim.UI
                 return;
             }
 
-            if (housePrefab == null)
+            // Selecionar o prefab correto baseado no tipo
+            GameObject prefabToUse = GetPrefabParaTipo(tipo);
+            
+            if (prefabToUse == null)
             {
-                txtFeedback.text = "ERRO: Prefab da construcao nao configurado!";
+                txtFeedback.text = "ERRO: Prefab para " + tipo + " nao configurado!";
                 txtFeedback.color = btnRed;
                 return;
             }
@@ -332,7 +343,21 @@ namespace CitySim.UI
             _gamePanel.SetActive(false);
             
             // Iniciar modo de colocação no grid
-            gridBuildingSystem.InitializeBuildingWithType(housePrefab, tipo);
+            gridBuildingSystem.InitializeBuildingWithType(prefabToUse, tipo);
+        }
+
+        GameObject GetPrefabParaTipo(string tipo)
+        {
+            switch (tipo)
+            {
+                case "casa_impostos": return housePrefab;
+                case "comercio": return comercioPrefab;
+                case "industria": return industriaPrefab;
+                case "parque": return parquePrefab;
+                case "escola": return escolaPrefab;
+                case "hospital": return hospitalPrefab;
+                default: return housePrefab; // Fallback para casa se não tiver o prefab
+            }
         }
 
         int GetCustoConstrucao(string tipo)
