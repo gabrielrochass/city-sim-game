@@ -19,6 +19,15 @@ namespace CitySim.UI
         [SerializeField] private GameObject escolaPrefab;
         [SerializeField] private GameObject hospitalPrefab;
         
+        [Header("Background Sprites")]
+        [SerializeField] private Sprite menuBackgroundSprite;
+        [SerializeField] private Sprite gameBackgroundSprite;
+        [SerializeField] private Sprite titleSprite;
+        [SerializeField] private Sprite menuButtonsContainerSprite;
+        [SerializeField] private Sprite playButtonSprite;
+        [SerializeField] private Sprite howToPlayButtonSprite;
+        [SerializeField] private Sprite exitButtonSprite;
+        
         // Cores
         private Color bgColor = new Color(0.12f, 0.14f, 0.18f, 1f);
         private Color panelColor = new Color(0.08f, 0.1f, 0.14f, 0.98f);
@@ -83,19 +92,40 @@ namespace CitySim.UI
         // ==================== MENU ====================
         void CriarMenu()
         {
-            _menuPanel = CriarPainel("Menu", bgColor);
+            _menuPanel = CriarPainel("Menu", bgColor, menuBackgroundSprite);
 
-            var titulo = CriarTexto(_menuPanel.transform, "CITY SIM", 64);
-            titulo.color = Color.white;
-            PosicionarCentro(titulo.gameObject, 0, 150, 500, 80);
+            // Título como imagem
+            if (titleSprite != null)
+            {
+                var tituloObj = new GameObject("Title");
+                tituloObj.transform.SetParent(_menuPanel.transform, false);
+                var tituloImg = tituloObj.AddComponent<Image>();
+                tituloImg.sprite = titleSprite;
+                tituloImg.color = Color.white;
+                PosicionarCentro(tituloObj, 0, 230, 800, 300);
+            }
 
-            var sub = CriarTexto(_menuPanel.transform, "Meu Prefeito", 32);
-            sub.color = btnOrange;
-            PosicionarCentro(sub.gameObject, 0, 80, 400, 50);
+            // Container para botões
+            var buttonsContainer = new GameObject("ButtonsContainer");
+            buttonsContainer.transform.SetParent(_menuPanel.transform, false);
+            var containerRect = buttonsContainer.AddComponent<RectTransform>();
+            containerRect.anchorMin = new Vector2(0.5f, 0.5f);
+            containerRect.anchorMax = new Vector2(0.5f, 0.5f);
+            containerRect.anchoredPosition = new Vector2(0, -120);
+            containerRect.sizeDelta = new Vector2(360, 340);
+            
+            // Background do container
+            if (menuButtonsContainerSprite != null)
+            {
+                var containerImg = buttonsContainer.AddComponent<Image>();
+                containerImg.sprite = menuButtonsContainerSprite;
+                containerImg.color = Color.white;
+            }
 
-            CriarBotao(_menuPanel.transform, "JOGAR", btnGreen, 0, -20, 320, 65, IniciarJogo);
-            CriarBotao(_menuPanel.transform, "COMO JOGAR", btnBlue, 0, -100, 320, 65, MostrarInstrucoes);
-            CriarBotao(_menuPanel.transform, "SAIR", btnRed, 0, -180, 320, 65, Sair);
+            // Botões dentro do container (largura reduzida, espaçamento menor, movidos para direita)
+            CriarBotao(buttonsContainer.transform, "JOGAR", Color.white, 40, 90, 240, 100, IniciarJogo, playButtonSprite, false, true);
+            CriarBotao(buttonsContainer.transform, "COMO JOGAR", Color.white, 40, 15, 240, 100, MostrarInstrucoes, howToPlayButtonSprite, false, true);
+            CriarBotao(buttonsContainer.transform, "SAIR", Color.white, 40, -60, 240, 100, Sair, exitButtonSprite, false, true);
 
             var credito = CriarTexto(_menuPanel.transform, "v1.0 - Unity 6", 16);
             credito.color = new Color(1, 1, 1, 0.4f);
@@ -151,7 +181,7 @@ namespace CitySim.UI
         // ==================== JOGO ====================
         void CriarJogo()
         {
-            _gamePanel = CriarPainel("Jogo", bgColor);
+            _gamePanel = CriarPainel("Jogo", bgColor, gameBackgroundSprite);
 
             // === BARRA SUPERIOR - INDICADORES ===
             var barraTop = CriarPainelFilho(_gamePanel.transform, "BarraTop", panelColor);
@@ -748,7 +778,7 @@ namespace CitySim.UI
             _endPanel?.SetActive(false);
         }
 
-        GameObject CriarPainel(string nome, Color cor)
+        GameObject CriarPainel(string nome, Color cor, Sprite sprite = null)
         {
             var go = new GameObject(nome);
             go.transform.SetParent(_canvas.transform, false);
@@ -758,7 +788,17 @@ namespace CitySim.UI
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
             var img = go.AddComponent<Image>();
-            img.color = cor;
+            
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.color = Color.white; // Sem tint para mostrar sprite puro
+            }
+            else
+            {
+                img.color = cor;
+            }
+            
             return go;
         }
 
@@ -787,7 +827,7 @@ namespace CitySim.UI
             return tmp;
         }
 
-        void CriarBotao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao)
+        void CriarBotao(Transform parent, string texto, Color cor, float x, float y, float w, float h, UnityEngine.Events.UnityAction acao, Sprite sprite = null, bool showText = true, bool useShadowHover = false)
         {
             var go = new GameObject("Btn_" + texto);
             go.transform.SetParent(parent, false);
@@ -799,23 +839,65 @@ namespace CitySim.UI
             rect.sizeDelta = new Vector2(w, h);
 
             var img = go.AddComponent<Image>();
-            img.color = cor;
+            if (sprite != null)
+            {
+                img.sprite = sprite;
+                img.color = Color.white; // Sem tint para mostrar sprite puro
+            }
+            else
+            {
+                img.color = cor;
+            }
 
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(acao);
 
-            var colors = btn.colors;
-            colors.highlightedColor = new Color(cor.r + 0.15f, cor.g + 0.15f, cor.b + 0.15f);
-            colors.pressedColor = new Color(cor.r - 0.1f, cor.g - 0.1f, cor.b - 0.1f);
-            btn.colors = colors;
+            if (useShadowHover)
+            {
+                // Hover com sombra ao invés de cor
+                var shadow = go.AddComponent<Shadow>();
+                shadow.effectColor = new Color(0f, 0f, 0f, 0.5f);
+                shadow.effectDistance = new Vector2(5, -5);
+                shadow.enabled = false; // Começa desativada
+                
+                // Desativa mudança de cor no hover
+                var colors = btn.colors;
+                colors.highlightedColor = Color.white;
+                colors.pressedColor = Color.white;
+                colors.normalColor = Color.white;
+                btn.colors = colors;
+                
+                // Adiciona eventos para ativar/desativar sombra
+                var trigger = go.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                
+                var entryEnter = new UnityEngine.EventSystems.EventTrigger.Entry();
+                entryEnter.eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter;
+                entryEnter.callback.AddListener((data) => { shadow.enabled = true; });
+                trigger.triggers.Add(entryEnter);
+                
+                var entryExit = new UnityEngine.EventSystems.EventTrigger.Entry();
+                entryExit.eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit;
+                entryExit.callback.AddListener((data) => { shadow.enabled = false; });
+                trigger.triggers.Add(entryExit);
+            }
+            else
+            {
+                var colors = btn.colors;
+                colors.highlightedColor = new Color(cor.r + 0.15f, cor.g + 0.15f, cor.b + 0.15f);
+                colors.pressedColor = new Color(cor.r - 0.1f, cor.g - 0.1f, cor.b - 0.1f);
+                btn.colors = colors;
+            }
 
-            var txt = CriarTexto(go.transform, texto, 22);
-            var txtRect = txt.GetComponent<RectTransform>();
-            txtRect.anchorMin = Vector2.zero;
-            txtRect.anchorMax = Vector2.one;
-            txtRect.offsetMin = new Vector2(5, 3);
-            txtRect.offsetMax = new Vector2(-5, -3);
+            if (showText)
+            {
+                var txt = CriarTexto(go.transform, texto, 22);
+                var txtRect = txt.GetComponent<RectTransform>();
+                txtRect.anchorMin = Vector2.zero;
+                txtRect.anchorMax = Vector2.one;
+                txtRect.offsetMin = new Vector2(5, 3);
+                txtRect.offsetMax = new Vector2(-5, -3);
+            }
         }
 
         void PosicionarCentro(GameObject go, float x, float y, float w, float h)
