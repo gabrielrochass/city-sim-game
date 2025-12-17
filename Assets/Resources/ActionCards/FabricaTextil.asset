@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a88423d8bcbc8954282001c2aa8380f0, type: 3}
+  m_Name: FabricaTextil
+  m_EditorClassIdentifier: Assembly-CSharp::CitySim.Models.ActionCard
+  cardName: "F\xE1brica T\xEAxtil"
+  description: "Ind\xFAstria traz empregos e renda, mas polui e afeta sa\xFAde p\xFAblica."
+  type: 5
+  budgetCost: 3000
+  satisfactionEffect: 5
+  wellbeingEffect: -10
+  votesEffect: 8
+  populationEffect: 100
+  incomePerTurnEffect: 500
+  maintenanceCostEffect: 100
+  cardColor: {r: 0.9, g: 0.6, b: 0.1, a: 1}
+  cardIcon: {fileID: 0}
